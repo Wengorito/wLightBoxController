@@ -6,21 +6,20 @@ using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Text.Json;
+using System.Windows;
 
 namespace LightBoxController
 {
-    public class DeviceInfo
+    public class Device
     {
         public string deviceName { get; set; }
         public string product { get; set; }
         public string type { get; set; }
-        public int apiLevel { get; set; }
+        public string apiLevel { get; set; }
         public string hv { get; set; }
-
         public string fv { get; set; }
-
         public string id { get; set; }
-
         public string ip { get; set; }
     }
     public class DeviceState
@@ -36,24 +35,24 @@ namespace LightBoxController
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static string Serialize<T>(T obj)
-        {
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(obj.GetType());
-            MemoryStream ms = new MemoryStream();
-            serializer.WriteObject(ms, obj);
-            string retVal = Encoding.UTF8.GetString(ms.ToArray());
-            return retVal;
-        }
+        //public static string Serialize<T>(T obj)
+        //{
+        //    DataContractJsonSerializer serializer = new DataContractJsonSerializer(obj.GetType());
+        //    MemoryStream ms = new MemoryStream();
+        //    serializer.WriteObject(ms, obj);
+        //    string retVal = Encoding.UTF8.GetString(ms.ToArray());
+        //    return retVal;
+        //}
 
-        public static T Deserialize<T>(string json)
-        {
-            T obj = Activator.CreateInstance<T>();
-            MemoryStream ms = new MemoryStream(Encoding.Unicode.GetBytes(json));
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(obj.GetType());
-            obj = (T)serializer.ReadObject(ms);
-            ms.Close();
-            return obj;
-        }
+        //public static T Deserialize<T>(string json)
+        //{
+        //    T obj = Activator.CreateInstance<T>();
+        //    MemoryStream ms = new MemoryStream(Encoding.Unicode.GetBytes(json));
+        //    DataContractJsonSerializer serializer = new DataContractJsonSerializer(obj.GetType());
+        //    obj = (T)serializer.ReadObject(ms);
+        //    ms.Close();
+        //    return obj;
+        //}
 
         //niepotrzebna jednak
         private static void ParseIP(string ipAddress)
@@ -91,20 +90,38 @@ namespace LightBoxController
         }
         /***************************/
 
-        private static readonly HttpClient client = new HttpClient(); //readonly?
-        
+        HttpClient client = new HttpClient(); //readonly?
+        //http://192.168.0.23/ adres mojego boxa
+
         //trzeba jakos przeskanowac urzadzenia ip dostepne
-        public async void getInfo()
+        public async void getInfo(Device device, string httpUri)
         {
-            var deviceInfo = new DeviceInfo();
-            //IPAddress address = IPAddress.Parse("http://192.168.0.23/info");
-            //var deviceInfo = new DeviceInfo();
-            var result = await client.GetAsync("http://192.168.0.23/info");
-            Trace.WriteLine(result.StatusCode);
+            string requestUri = httpUri + "/info";
+            //EXCEPTIONS
+            //może to ten client rzuca błędami?
+            //jak to do gui przekazac?
+            //enum errrcode?
+            try
+            {
+                var result = await client.GetAsync(requestUri);
+                Trace.WriteLine(result.StatusCode);
+            }
+            catch (HttpRequestException)
+            {
+                Trace.WriteLine("Host not responding");
+            }
+
+
+
             string responseBody = await client.GetStringAsync("http://192.168.0.23/info");
             Trace.WriteLine(responseBody);
-
-            //return deviceInfo;
+            //DeserializeAsync
+            device = JsonSerializer.Deserialize<Device>(responseBody);
+            Trace.WriteLine($"API level: {device.apiLevel}");
+            Trace.WriteLine($"Device Name: {device.deviceName}");
+            Trace.WriteLine($"fv: {device.fv}");
+            Trace.WriteLine(device.fv);
+            //return Device;
         }
         public async void getState()
         {

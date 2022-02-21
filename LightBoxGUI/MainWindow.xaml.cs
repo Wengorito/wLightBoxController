@@ -39,14 +39,11 @@ namespace LightBoxGUI
         {
             //ErrorCode ErrorWrapper
             LightBoxClass controller = new LightBoxClass();
-            Device device = new Device();
 
+            //docelowo metoda w klasie bedzie zwracac obiekt
+            controller.getInfo(httpUri);
 
-            controller.getInfo(device, httpUri);
-
-            //Trace.WriteLine(Excepti);
-
-            //lblDeviceName.Content = "Device name: " + device.Summary;
+            lblDeviceName.Content = "Device name: " + "co metoda zwroci";// obj.device.deviceName;
         }
 
         private void btnSetIP_Click(object sender, RoutedEventArgs e)

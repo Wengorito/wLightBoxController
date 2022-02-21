@@ -1,8 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
@@ -114,38 +116,11 @@ namespace LightBoxController
         HttpClient client = new HttpClient(); //readonly?
         //http://192.168.0.23/ adres mojego boxa
 
+        //192.168.240.163 galaxy
+
         //trzeba jakos przeskanowac urzadzenia ip dostepne
-        public async void getInfo(Device device, string httpUri)
-        {
-            string jsonString =
-@"{
-  ""Date"": ""2019-08-01T00:00:00-07:00"",
-  ""TemperatureCelsius"": 25,
-  ""Summary"": ""Hot"",
-  ""DatesAvailable"": [
-    ""2019-08-01T00:00:00-07:00"",
-    ""2019-08-02T00:00:00-07:00""
-  ],
-  ""TemperatureRanges"": {
-                ""Cold"": {
-                    ""High"": 20,
-      ""Low"": -10
-                },
-    ""Hot"": {
-                    ""High"": 60,
-      ""Low"": 20
-    }
-            },
-  ""SummaryWords"": [
-    ""Cool"",
-    ""Windy"",
-    ""Humid""
-  ]
-}
-";
-
-
-
+        public async void getInfo(string httpUri)
+        { 
             string requestUri = httpUri + "/info";
             //EXCEPTIONS
             //może to ten client rzuca błędami?
@@ -171,12 +146,25 @@ namespace LightBoxController
 
             //var dec = JsonSerializer.Deserialize<dynamic>(responseBody);
             //device = JsonSerializer.Deserialize<Device>(responseBody);
-            device = JsonConvert.DeserializeObject<Device>(responseBody);
+            Root rootDevObj = new Root();
+            rootDevObj = JsonConvert.DeserializeObject<Root>(responseBody);
 
+            foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevObj.device))
+            {
+                string name = descriptor.Name;
+                object value = descriptor.GetValue(rootDevObj.device);
+                Trace.WriteLine($"{name} = {value}");
+            }
+            /*Type t = rootDevObj.device.GetType(); // Where obj is object whose properties you need.
+            PropertyInfo[] pi = t.GetProperties();
+            foreach (PropertyInfo p in pi)
+            {
+                Trace.WriteLine(p.Name + " : " + p.GetValue(rootDevObj.device));
+            }*/
 
             //Trace.WriteLine($"API level: {device.apiLevel}");
-            Trace.WriteLine($"Devize name: {device.deviceName}");
-            Trace.WriteLine(device.deviceName);
+            //Trace.WriteLine($"Devize name: {deviced.device.deviceName}");
+            //Trace.WriteLine(deviced.device.deviceName);
             //Trace.WriteLine($"fv: {device.fv}");
             //Trace.WriteLine(device.fv);
             //return Device;

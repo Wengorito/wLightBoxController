@@ -8,9 +8,25 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
+using Newtonsoft.Json;
 
 namespace LightBoxController
 {
+    /*public class Device
+    {        
+        public Int32 upTimeS { get; set; }
+        //public string deviceName { get; set; }
+        public string type { get; set; }
+        public string product { get; set; }
+        public string hv { get; set; }
+        public string fv { get; set; }
+        public string universe { get; set; }
+        public string apiLevel { get; set; }
+        public string id { get; set; }
+        public string ip { get; set; }
+        public string availableFv { get; set; }
+
+    }*/
     public class Device
     {
         public string deviceName { get; set; }
@@ -21,6 +37,11 @@ namespace LightBoxController
         public string fv { get; set; }
         public string id { get; set; }
         public string ip { get; set; }
+    }
+
+    public class Root
+    {
+        public Device device { get; set; }
     }
     public class DeviceState
     {
@@ -96,31 +117,68 @@ namespace LightBoxController
         //trzeba jakos przeskanowac urzadzenia ip dostepne
         public async void getInfo(Device device, string httpUri)
         {
+            string jsonString =
+@"{
+  ""Date"": ""2019-08-01T00:00:00-07:00"",
+  ""TemperatureCelsius"": 25,
+  ""Summary"": ""Hot"",
+  ""DatesAvailable"": [
+    ""2019-08-01T00:00:00-07:00"",
+    ""2019-08-02T00:00:00-07:00""
+  ],
+  ""TemperatureRanges"": {
+                ""Cold"": {
+                    ""High"": 20,
+      ""Low"": -10
+                },
+    ""Hot"": {
+                    ""High"": 60,
+      ""Low"": 20
+    }
+            },
+  ""SummaryWords"": [
+    ""Cool"",
+    ""Windy"",
+    ""Humid""
+  ]
+}
+";
+
+
+
             string requestUri = httpUri + "/info";
             //EXCEPTIONS
             //może to ten client rzuca błędami?
             //jak to do gui przekazac?
             //enum errrcode?
+            HttpResponseMessage result;
             try
             {
-                var result = await client.GetAsync(requestUri);
+                result = await client.GetAsync(requestUri);
                 Trace.WriteLine(result.StatusCode);
             }
             catch (HttpRequestException)
             {
                 Trace.WriteLine("Host not responding");
+                //return result.StatusCode;
+
+                //POMOCY Z TYMI ERRORAMI
+                //JAK WY
             }
-
-
-
-            string responseBody = await client.GetStringAsync("http://192.168.0.23/info");
+            string responseBody = await client.GetStringAsync(requestUri);
             Trace.WriteLine(responseBody);
             //DeserializeAsync
-            device = JsonSerializer.Deserialize<Device>(responseBody);
-            Trace.WriteLine($"API level: {device.apiLevel}");
-            Trace.WriteLine($"Device Name: {device.deviceName}");
-            Trace.WriteLine($"fv: {device.fv}");
-            Trace.WriteLine(device.fv);
+
+            //var dec = JsonSerializer.Deserialize<dynamic>(responseBody);
+            //device = JsonSerializer.Deserialize<Device>(responseBody);
+            device = JsonConvert.DeserializeObject<Device>(responseBody);
+
+
+            //Trace.WriteLine($"API level: {device.apiLevel}");
+            Trace.WriteLine($"Devize name: {device.deviceName}");
+            Trace.WriteLine(device.deviceName);
+            //Trace.WriteLine($"fv: {device.fv}");
+            //Trace.WriteLine(device.fv);
             //return Device;
         }
         public async void getState()

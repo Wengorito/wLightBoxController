@@ -41,16 +41,12 @@ namespace LightBoxGUI
             LightBoxClass controller = new LightBoxClass();
             Device device = new Device();
 
-            try
-            {
-                controller.getInfo(device, httpUri);
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Host not responding");
-                //Trace.WriteLine(Excepti);
-            }
-    lblDeviceName.Content = $"Device name: {device.deviceName}";
+
+            controller.getInfo(device, httpUri);
+
+            //Trace.WriteLine(Excepti);
+
+            //lblDeviceName.Content = "Device name: " + device.Summary;
         }
 
         private void btnSetIP_Click(object sender, RoutedEventArgs e)
@@ -62,7 +58,7 @@ namespace LightBoxGUI
             bool ValidateIP = IPAddress.TryParse(ipAddress, out ip);
             if (ValidateIP)
             {
-                MessageBox.Show("This is a valid ip address");
+                //MessageBox.Show("This is a valid ip address");
                 httpUri = string.Concat("http://", ipAddress);
                 Trace.WriteLine($"IP add set as {tbIpAddress.Text}");
             }

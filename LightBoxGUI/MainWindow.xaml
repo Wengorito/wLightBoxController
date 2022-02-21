@@ -10,7 +10,7 @@
         <Button x:Name="btnDeviceInfo" Content="Get device info" HorizontalAlignment="Left" Margin="130,80,0,0" VerticalAlignment="Top" Click="btnDeviceInfo_Click"/>
         <Label x:Name="lblDeviceName" Content="Device name:" HorizontalAlignment="Left" Margin="130,100,0,0" VerticalAlignment="Top"/>
         <Button x:Name="btnSetIP" Content="Set IP" HorizontalAlignment="Left" Margin="45,80,0,0" VerticalAlignment="Top" Click="btnSetIP_Click"/>
-        <TextBox x:Name="tbIpAddress" HorizontalAlignment="Left" Margin="5,104,0,0" Text="192.168.0.23" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="tbIpAddress" HorizontalAlignment="Left" Margin="5,104,0,0" Text="192.168.240.163" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
 
     </Grid>
 </Window>

@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using Newtonsoft.Json;
 
@@ -58,24 +59,6 @@ namespace LightBoxController
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
         /// <returns></returns>
-        //public static string Serialize<T>(T obj)
-        //{
-        //    DataContractJsonSerializer serializer = new DataContractJsonSerializer(obj.GetType());
-        //    MemoryStream ms = new MemoryStream();
-        //    serializer.WriteObject(ms, obj);
-        //    string retVal = Encoding.UTF8.GetString(ms.ToArray());
-        //    return retVal;
-        //}
-
-        //public static T Deserialize<T>(string json)
-        //{
-        //    T obj = Activator.CreateInstance<T>();
-        //    MemoryStream ms = new MemoryStream(Encoding.Unicode.GetBytes(json));
-        //    DataContractJsonSerializer serializer = new DataContractJsonSerializer(obj.GetType());
-        //    obj = (T)serializer.ReadObject(ms);
-        //    ms.Close();
-        //    return obj;
-        //}
 
         //niepotrzebna jednak
         private static void ParseIP(string ipAddress)
@@ -119,9 +102,10 @@ namespace LightBoxController
         //192.168.240.163 galaxy
 
         //trzeba jakos przeskanowac urzadzenia ip dostepne
-        public async void getInfo(string httpUri)
-        { 
+        public async Task<Device> getInfo(string httpUri)
+        {
             string requestUri = httpUri + "/info";
+            Root rootDevObj = new Root();
             //EXCEPTIONS
             //może to ten client rzuca błędami?
             //jak to do gui przekazac?
@@ -138,36 +122,55 @@ namespace LightBoxController
                 //return result.StatusCode;
 
                 //POMOCY Z TYMI ERRORAMI
-                //JAK WY
+                //JAK WYkOKRZystac te domyslne
             }
-            string responseBody = await client.GetStringAsync(requestUri);
-            Trace.WriteLine(responseBody);
-            //DeserializeAsync
-
-            //var dec = JsonSerializer.Deserialize<dynamic>(responseBody);
-            //device = JsonSerializer.Deserialize<Device>(responseBody);
-            Root rootDevObj = new Root();
-            rootDevObj = JsonConvert.DeserializeObject<Root>(responseBody);
-
-            foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevObj.device))
+            try
             {
-                string name = descriptor.Name;
-                object value = descriptor.GetValue(rootDevObj.device);
-                Trace.WriteLine($"{name} = {value}");
+                string responseBody = await client.GetStringAsync(requestUri);
+                Trace.WriteLine(responseBody);
+
+                rootDevObj = JsonConvert.DeserializeObject<Root>(responseBody);
+
+                foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevObj.device))
+                {
+                    string name = descriptor.Name;
+                    object value = descriptor.GetValue(rootDevObj.device);
+                    Trace.WriteLine($"{name} = {value}");
+                }
             }
+            catch (HttpRequestException e)
+            {
+                Trace.WriteLine("Host not responding");
+                Trace.WriteLine("ArgumentNullException caught!!!");
+                Trace.WriteLine("Source : " + e.Source);
+                Trace.WriteLine("Message : " + e.Message);
+
+            }
+            catch (InvalidOperationException)
+            {
+                Trace.WriteLine("IP address incorrect");
+            }
+            catch (TaskCanceledException)
+            {
+                Trace.WriteLine("Timeout reached");
+            }
+
+            //    foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevObj.device))
+            //    {
+            //        string name = descriptor.Name;
+            //        object value = descriptor.GetValue(rootDevObj.device);
+            //        Trace.WriteLine($"{name} = {value}");
+            //    }
+
+            return new Device { deviceName = rootDevObj.device.deviceName, 
+                product = rootDevObj.device.product, apiLevel = rootDevObj.device.apiLevel};
+
             /*Type t = rootDevObj.device.GetType(); // Where obj is object whose properties you need.
             PropertyInfo[] pi = t.GetProperties();
             foreach (PropertyInfo p in pi)
             {
                 Trace.WriteLine(p.Name + " : " + p.GetValue(rootDevObj.device));
             }*/
-
-            //Trace.WriteLine($"API level: {device.apiLevel}");
-            //Trace.WriteLine($"Devize name: {deviced.device.deviceName}");
-            //Trace.WriteLine(deviced.device.deviceName);
-            //Trace.WriteLine($"fv: {device.fv}");
-            //Trace.WriteLine(device.fv);
-            //return Device;
         }
         public async void getState()
         {

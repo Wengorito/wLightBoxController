@@ -26,24 +26,32 @@ namespace LightBoxGUI
         public string ipAddress { get; set; }
         public string httpUri { get; set; }
 
+        public LightBoxClass controller = new LightBoxClass();
+
+
         public MainWindow()
         {
             InitializeComponent();
 
-            //LightBoxClass controller = new LightBoxClass();
             //controller.getInfo();
             //controller.getState();
         }
 
-        private void btnDeviceInfo_Click(object sender, RoutedEventArgs e)
+        private async void btnDeviceInfo_Click(object sender, RoutedEventArgs e)
         {
             //ErrorCode ErrorWrapper
-            LightBoxClass controller = new LightBoxClass();
-
-            //docelowo metoda w klasie bedzie zwracac obiekt
-            controller.getInfo(httpUri);
-
-            lblDeviceName.Content = "Device name: " + "co metoda zwroci";// obj.device.deviceName;
+            //jak zly ip to nie ma obiektu i wywala wyjatek - jak sie zabepieczyc?
+            try
+            {
+                var myDevice = await controller.getInfo(httpUri);
+                lblDeviceNameInfo.Content = myDevice.deviceName;// obj.device.deviceName;
+                lblProductInfo.Content = myDevice.product;// obj.device.deviceName;
+                lblApiLevelInfo.Content = myDevice.apiLevel;// obj.device.deviceName;
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Set IP first");
+            }
         }
 
         private void btnSetIP_Click(object sender, RoutedEventArgs e)
@@ -63,6 +71,11 @@ namespace LightBoxGUI
                 MessageBox.Show("This is not a valid ip address. Re-enter");
 
             //ewentualnie arp i z listy
+        }
+
+        private void btnWifiDisconnect_Click(object sender, RoutedEventArgs e)
+        {
+            ipAddress = http://192.168.4.1/api/wifi/disconnect
         }
     }
 }

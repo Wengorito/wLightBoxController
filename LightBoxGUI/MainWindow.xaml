@@ -5,12 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LightBoxGUI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" WindowStartupLocation="CenterScreen">
     <Grid>
         <Button x:Name="btnDeviceInfo" Content="Get device info" HorizontalAlignment="Left" Margin="130,80,0,0" VerticalAlignment="Top" Click="btnDeviceInfo_Click"/>
-        <Label x:Name="lblDeviceName" Content="Device name:" HorizontalAlignment="Left" Margin="130,100,0,0" VerticalAlignment="Top"/>
         <Button x:Name="btnSetIP" Content="Set IP" HorizontalAlignment="Left" Margin="45,80,0,0" VerticalAlignment="Top" Click="btnSetIP_Click"/>
-        <TextBox x:Name="tbIpAddress" HorizontalAlignment="Left" Margin="5,104,0,0" Text="192.168.0.23" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="tbIpAddress" HorizontalAlignment="Left" Margin="5,104,0,0" Text="192.168.240.163" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <Label x:Name="lblDeviceName" Content="Device name:" HorizontalAlignment="Left" Margin="130,100,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="lblDeviceNameInfo" Content="" HorizontalAlignment="Left" Margin="210,100,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="lblProduct" Content="Product:" HorizontalAlignment="Left" Margin="130,120,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="lblProductInfo" Content="" HorizontalAlignment="Left" Margin="210,120,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="lblApiLevel" Content="API Level:" HorizontalAlignment="Left" Margin="130,140,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="lblApiLevelInfo" Content="" HorizontalAlignment="Left" Margin="210,140,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="btnWifiDisconnect" Content="Disconnect WiFi" HorizontalAlignment="Left" Margin="249,80,0,0" VerticalAlignment="Top" Click="btnWifiDisconnect_Click"/>
+        <Button x:Name="btnWifiConnect" Content="Connect WiFi" HorizontalAlignment="Left" Margin="249,106,0,0" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>

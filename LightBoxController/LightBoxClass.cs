@@ -11,25 +11,10 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
-using Newtonsoft.Json;
 
 namespace LightBoxController
 {
-    /*public class Device
-    {        
-        public Int32 upTimeS { get; set; }
-        //public string deviceName { get; set; }
-        public string type { get; set; }
-        public string product { get; set; }
-        public string hv { get; set; }
-        public string fv { get; set; }
-        public string universe { get; set; }
-        public string apiLevel { get; set; }
-        public string id { get; set; }
-        public string ip { get; set; }
-        public string availableFv { get; set; }
-
-    }*/
+    #region
     public class Device
     {
         public string deviceName { get; set; }
@@ -41,15 +26,35 @@ namespace LightBoxController
         public string id { get; set; }
         public string ip { get; set; }
     }
-
-    public class Root
+    public class RootDevice
     {
         public Device device { get; set; }
     }
-    public class DeviceState
-    {
 
+    public class DurationsMs
+    {
+        public int colorFade { get; set; }
+        public int effectFade { get; set; }
+        public int effectStep { get; set; }
     }
+    public class Rgbw
+    {
+        public int colorMode { get; set; }
+        public int effectID { get; set; }
+        public string desiredColor { get; set; }
+        public string currentColor { get; set; }
+        public string lastOnColor { get; set; }
+        public DurationsMs durationsMs { get; set; }
+    }
+    public class RootDeviceStateGet
+    {
+        public Rgbw rgbw { get; set; }
+    }
+    public class RootDeviceStateSet
+    {
+        public Rgbw rgbw { get; set; }
+    }
+    #endregion
     public class LightBoxClass
     {
         /*********helper methods***********/
@@ -105,7 +110,7 @@ namespace LightBoxController
         public async Task<Device> getInfo(string httpUri)
         {
             string requestUri = httpUri + "/info";
-            Root rootDevObj = new Root();
+            RootDevice rootDevObj = new RootDevice();
             //EXCEPTIONS
             //może to ten client rzuca błędami?
             //jak to do gui przekazac?
@@ -118,8 +123,9 @@ namespace LightBoxController
             }
             catch (HttpRequestException)
             {
-                Trace.WriteLine("Host not responding");
+                Trace.WriteLine("Host not responding"); //to trzebe przekazac "wyzej", do GUI
                 //return result.StatusCode;
+                //return Task<Device>(null);
 
                 //POMOCY Z TYMI ERRORAMI
                 //JAK WYkOKRZystac te domyslne
@@ -127,9 +133,8 @@ namespace LightBoxController
             try
             {
                 string responseBody = await client.GetStringAsync(requestUri);
-                Trace.WriteLine(responseBody);
-
-                rootDevObj = JsonConvert.DeserializeObject<Root>(responseBody);
+                //korzystać z default
+                rootDevObj = JsonSerializer.Deserialize<RootDevice>(responseBody);
 
                 foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevObj.device))
                 {
@@ -162,8 +167,12 @@ namespace LightBoxController
             //        Trace.WriteLine($"{name} = {value}");
             //    }
 
-            return new Device { deviceName = rootDevObj.device.deviceName, 
-                product = rootDevObj.device.product, apiLevel = rootDevObj.device.apiLevel};
+            return new Device 
+            { 
+                deviceName = rootDevObj.device.deviceName, 
+                product = rootDevObj.device.product, 
+                apiLevel = rootDevObj.device.apiLevel
+            };
 
             /*Type t = rootDevObj.device.GetType(); // Where obj is object whose properties you need.
             PropertyInfo[] pi = t.GetProperties();
@@ -172,12 +181,23 @@ namespace LightBoxController
                 Trace.WriteLine(p.Name + " : " + p.GetValue(rootDevObj.device));
             }*/
         }
-        public async void getState()
+        public async Task<RootDeviceStateGet> getState(string httpUri)
         {
-            //var deviceState = new DeviceState();
+            string requestUri = httpUri + "/api/rgbw/state";
+            RootDeviceStateGet rootStateObj = new RootDeviceStateGet();
+            HttpResponseMessage result;
             try
             {
-                var content = await client.GetStringAsync("http://192.168.0.23//api/rgbw/state");
+                result = await client.GetAsync(requestUri);
+                Trace.WriteLine(result.StatusCode);
+            }
+            catch (HttpRequestException)
+            {
+                Trace.WriteLine("Host not responding"); //to trzebe przekazac "wyzej", do GUI
+            }
+            try
+            {
+                var content = await client.GetStringAsync(requestUri);
 
                 Trace.WriteLine("\ntu poczatek get state:\n" + content);
             }
@@ -187,8 +207,46 @@ namespace LightBoxController
                 Trace.WriteLine("Message :{0} ", e.Message);
             }
 
-            //return deviceState;
+            try
+            {
+                string responseBody = await client.GetStringAsync(requestUri);
+                rootStateObj = JsonSerializer.Deserialize<RootDeviceStateGet>(responseBody);
+                foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootStateObj.rgbw))
+                {
+                    string name = descriptor.Name;
+                    object value = descriptor.GetValue(rootStateObj.rgbw);
+                    Trace.WriteLine($"{name} = {value}");
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                Trace.WriteLine("Host not responding");
+                Trace.WriteLine("ArgumentNullException caught!!!");
+                Trace.WriteLine("Source : " + e.Source);
+                Trace.WriteLine("Message : " + e.Message);
+
+            }
+            catch (InvalidOperationException)
+            {
+                Trace.WriteLine("IP address incorrect");
+            }
+            catch (TaskCanceledException)
+            {
+                Trace.WriteLine("Timeout reached");
+            }
+            return new RootDeviceStateGet
+            {
+
+            };
         }
-        //public void setState
+        public async void setState(string httpUri, string settings)
+        {
+            //pobrac z guia parametry
+            //wpisac do objektu
+            //serializowac do jsona
+            //wyslac do device
+
+            //w gui podzialke pole naglowki itd
+        }
     }
 }

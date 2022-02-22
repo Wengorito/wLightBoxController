@@ -36,24 +36,6 @@ namespace LightBoxGUI
             //controller.getInfo();
             //controller.getState();
         }
-
-        private async void btnDeviceInfo_Click(object sender, RoutedEventArgs e)
-        {
-            //ErrorCode ErrorWrapper
-            //jak zly ip to nie ma obiektu i wywala wyjatek - jak sie zabepieczyc?
-            try
-            {
-                var myDevice = await controller.getInfo(httpUri);
-                lblDeviceNameInfo.Content = myDevice.deviceName;// obj.device.deviceName;
-                lblProductInfo.Content = myDevice.product;// obj.device.deviceName;
-                lblApiLevelInfo.Content = myDevice.apiLevel;// obj.device.deviceName;
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Set IP first");
-            }
-        }
-
         private void btnSetIP_Click(object sender, RoutedEventArgs e)
         {
             //traje i kacze WSZEDZIE
@@ -72,10 +54,32 @@ namespace LightBoxGUI
 
             //ewentualnie arp i z listy
         }
-
-        private void btnWifiDisconnect_Click(object sender, RoutedEventArgs e)
+        private async void btnDeviceInfo_Click(object sender, RoutedEventArgs e)
         {
-            ipAddress = http://192.168.4.1/api/wifi/disconnect
+            //ErrorCode ErrorWrapper
+            //jak zly ip to nie ma obiektu i wywala wyjatek - jak sie zabepieczyc?
+            try
+            {
+                var myDevice = await controller.getInfo(httpUri);
+                lblDeviceNameInfo.Content = myDevice.deviceName;// obj.device.deviceName;
+                lblProductInfo.Content = myDevice.product;// obj.device.deviceName;
+                lblApiLevelInfo.Content = myDevice.apiLevel;// obj.device.deviceName;
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Set IP first");
+            }
+        }
+        private async void btnGetState_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var myDevice = await controller.getState(httpUri);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Set IP first");
+            }
         }
     }
 }

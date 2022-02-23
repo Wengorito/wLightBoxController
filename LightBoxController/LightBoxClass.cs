@@ -14,7 +14,26 @@ using System.Windows;
 
 namespace LightBoxController
 {
+    //osoban klaska
+    //Model: get representation
+
+    //enumy na kolory i mody
+
+    //library przerzucac bledy htttp do ui (poszukac biblioteki enum z bledami http)
+
+    //rester do firefox
+    //https://stackoverflow.com/questions/6507889/how-to-ignore-a-property-in-class-if-null-using-json-net
+
     #region
+    //poszukac jakiejs ladnego builder (lombok w javie)
+ //   PostRepresentation.builder()
+	//.rgbw
+	//	.desiredColor("ff00300000")
+	//	.durationMs
+	//		.colorFade(1000)
+	//		.build()
+	//	.build()
+	//.build();
     public class Device
     {
         public string deviceName { get; set; }
@@ -101,12 +120,9 @@ namespace LightBoxController
         }
         /***************************/
 
-        //client moze jako argument lepiej?
         private static readonly HttpClient client = new HttpClient();
-        //http://192.168.0.23/ adres mojego boxa
 
-        //192.168.240.163 galaxy
-
+    
         //trzeba jakos przeskanowac urzadzenia ip dostepne
         public async Task<Device> getInfo(string httpUri)
         {
@@ -197,6 +213,7 @@ namespace LightBoxController
             {
                 Trace.WriteLine("Host not responding"); //to trzebe przekazac "wyzej", do GUI
             }
+            //throw jakis dac i w metodzie ktora wola lapac, finally na pozioie ui shandlwoac i komunikowac
             try
             {
                 var content = await client.GetStringAsync(requestUri);
@@ -205,7 +222,7 @@ namespace LightBoxController
             }
             catch (HttpRequestException e)
             {
-                Trace.WriteLine("\nException Caught!");
+                Trace.WriteLine("Exception Caught!");
                 Trace.WriteLine("Message :{0} ", e.Message);
             }
 
@@ -213,6 +230,7 @@ namespace LightBoxController
             {
                 string responseBody = await client.GetStringAsync(requestUri);
                 rootStateObj = JsonSerializer.Deserialize<RootDeviceStateGet>(responseBody);
+                //output print
                 foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootStateObj.rgbw))
                 {
                     string name = descriptor.Name;
@@ -241,6 +259,7 @@ namespace LightBoxController
 
             };
         }
+
         public async void setState(string httpUri)//, RootDeviceStateSet rootStateObj)
         {
             //pobrac z guia parametry
@@ -252,12 +271,21 @@ namespace LightBoxController
 
             RootDeviceStateSet myDevState = new RootDeviceStateSet();
             Rgbw myRgbw = new();
-            
+
+            //wzorzec projektowy builder
+            //fluent api
+            //rootdevicestateset.builder().rgbw.colorMode
+
+
+            //bottom up
+
+
             Trace.WriteLine(myRgbw.currentColor);
-            myRgbw.colorMode = 4;
+            myRgbw.desiredColor = "255255";
             //myRgbw.desiredColor = "ff--301200";
             //myRgbw.durationsMs.colorFade = 1000;
             Trace.WriteLine(myRgbw.desiredColor);
+
             myDevState.rgbw = myRgbw;
 
             Trace.WriteLine(myDevState.rgbw.colorMode);
@@ -267,11 +295,13 @@ namespace LightBoxController
 
             //może trzeba pobrać get najpierw i do tego obiektu powpisywac?
 
-            rootStateObj.rgbw.colorMode = 4;
-            Trace.WriteLine(rootStateObj.rgbw.colorMode);
+            //rootStateObj.rgbw.colorMode = 4;
+            //Trace.WriteLine(rootStateObj.rgbw.colorMode);
 
-            string stateJson = JsonSerializer.Serialize<RootDeviceStateGet>(rootStateObj);
+            //czy mozna ustawic deffaultowe zachowenia serializerwoi
+            string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(myDevState);
             Trace.WriteLine(stateJson);
+
             HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
             await client.PostAsync(requestUri, httpContent);
         }

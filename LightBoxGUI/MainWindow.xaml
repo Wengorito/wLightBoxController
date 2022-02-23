@@ -48,7 +48,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="0" Grid.Column="1">
-                    <TextBox x:Name="tbIpAddress" HorizontalAlignment="Left" Margin="0,6,0,0" Text="192.168.4.1" TextWrapping="Wrap"  Width="120"/>
+                    <TextBox x:Name="tbIpAddress" HorizontalAlignment="Left" Margin="0,6,0,0" Text="192.168.0.23" TextWrapping="Wrap"  Width="120"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="1">
                     <Label x:Name="lblDeviceNameInfo" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>

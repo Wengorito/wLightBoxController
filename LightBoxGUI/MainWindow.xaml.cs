@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -75,6 +76,20 @@ namespace LightBoxGUI
             try
             {
                 var myDevice = await controller.getState(httpUri);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Set IP first");
+            }
+        }
+        private void btnSetState_Click(object sender, RoutedEventArgs e)
+        {
+
+            //RootDeviceStateSet myDevState = new();
+
+            try
+            {
+                controller.setState(httpUri);//, myDevState);
             }
             catch (Exception)
             {

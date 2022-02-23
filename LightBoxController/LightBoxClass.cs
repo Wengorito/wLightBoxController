@@ -101,7 +101,8 @@ namespace LightBoxController
         }
         /***************************/
 
-        HttpClient client = new HttpClient(); //readonly?
+        //client moze jako argument lepiej?
+        private static readonly HttpClient client = new HttpClient();
         //http://192.168.0.23/ adres mojego boxa
 
         //192.168.240.163 galaxy
@@ -166,7 +167,7 @@ namespace LightBoxController
             //        object value = descriptor.GetValue(rootDevObj.device);
             //        Trace.WriteLine($"{name} = {value}");
             //    }
-
+            //wywala przy nieudanej probie polaecznia
             return new Device 
             { 
                 deviceName = rootDevObj.device.deviceName, 
@@ -181,10 +182,11 @@ namespace LightBoxController
                 Trace.WriteLine(p.Name + " : " + p.GetValue(rootDevObj.device));
             }*/
         }
+        RootDeviceStateGet rootStateObj = new();
         public async Task<RootDeviceStateGet> getState(string httpUri)
         {
             string requestUri = httpUri + "/api/rgbw/state";
-            RootDeviceStateGet rootStateObj = new RootDeviceStateGet();
+            //_ = new RootDeviceStateGet();
             HttpResponseMessage result;
             try
             {
@@ -239,14 +241,39 @@ namespace LightBoxController
 
             };
         }
-        public async void setState(string httpUri, string settings)
+        public async void setState(string httpUri)//, RootDeviceStateSet rootStateObj)
         {
             //pobrac z guia parametry
             //wpisac do objektu
             //serializowac do jsona
             //wyslac do device
 
-            //w gui podzialke pole naglowki itd
+            string requestUri = httpUri + "/api/rgbw/set";
+
+            RootDeviceStateSet myDevState = new RootDeviceStateSet();
+            Rgbw myRgbw = new();
+            
+            Trace.WriteLine(myRgbw.currentColor);
+            myRgbw.colorMode = 4;
+            //myRgbw.desiredColor = "ff--301200";
+            //myRgbw.durationsMs.colorFade = 1000;
+            Trace.WriteLine(myRgbw.desiredColor);
+            myDevState.rgbw = myRgbw;
+
+            Trace.WriteLine(myDevState.rgbw.colorMode);
+
+            //myDevState.rgbw.desiredColor = "ff--301200";
+            //myDevState.rgbw.durationsMs.colorFade = 1000;
+
+            //może trzeba pobrać get najpierw i do tego obiektu powpisywac?
+
+            rootStateObj.rgbw.colorMode = 4;
+            Trace.WriteLine(rootStateObj.rgbw.colorMode);
+
+            string stateJson = JsonSerializer.Serialize<RootDeviceStateGet>(rootStateObj);
+            Trace.WriteLine(stateJson);
+            HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
+            await client.PostAsync(requestUri, httpContent);
         }
     }
 }

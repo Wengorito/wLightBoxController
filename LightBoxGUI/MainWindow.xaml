@@ -5,19 +5,68 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LightBoxGUI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" WindowStartupLocation="CenterScreen">
+        Title="MainWindow" Height="450" Width="300" WindowStartupLocation="CenterScreen">
     <Grid>
-        <Button x:Name="btnDeviceInfo" Content="Get info" HorizontalAlignment="Left" Margin="130,80,0,0" VerticalAlignment="Top" Click="btnDeviceInfo_Click"/>
-        <Button x:Name="btnSetIP" Content="Set IP" HorizontalAlignment="Left" Margin="45,80,0,0" VerticalAlignment="Top" Click="btnSetIP_Click"/>
-        <TextBox x:Name="tbIpAddress" HorizontalAlignment="Left" Margin="5,104,0,0" Text="192.168.0.23" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-        <Label x:Name="lblDeviceName" Content="Device name:" HorizontalAlignment="Left" Margin="130,100,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblDeviceNameInfo" Content="" HorizontalAlignment="Left" Margin="210,100,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblProduct" Content="Product:" HorizontalAlignment="Left" Margin="130,120,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblProductInfo" Content="" HorizontalAlignment="Left" Margin="210,120,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblApiLevel" Content="API Level:" HorizontalAlignment="Left" Margin="130,140,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblApiLevelInfo" Content="" HorizontalAlignment="Left" Margin="210,140,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="btnGetState" Content="Get state" HorizontalAlignment="Left" Margin="300,80,0,0" VerticalAlignment="Top" Click="btnGetState_Click"/>
-        <Button x:Name="btnWifiConnect" Content="Set state" HorizontalAlignment="Left" Margin="433,80,0,0" VerticalAlignment="Top"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>            
+        </Grid.RowDefinitions>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+        </Grid.ColumnDefinitions>
+        
+        <GroupBox Header="DEVICE" Margin="10,10,0,10" Grid.Row="0" Grid.Column="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Row="0" Grid.Column="0">
+                    <Button x:Name="btnSetIP" Content="Enter IP" HorizontalAlignment="Center" Margin="0,5,0,0" Click="btnSetIP_Click"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="0">
+                    <Button x:Name="btnDeviceInfo" Content="Get info" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top" Click="btnDeviceInfo_Click"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Grid.Column="0">
+                    <Label x:Name="lblDeviceName" Content="Device name:" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" BorderThickness="1" BorderBrush="Aquamarine"/>
+                </StackPanel>
+                <StackPanel Grid.Row="3" Grid.Column="0">
+                    <Label x:Name="lblProduct" Content="Product:" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                </StackPanel>
+                <StackPanel Grid.Row="4" Grid.Column="0">
+                    <Label x:Name="lblApiLevel" Content="API Level:" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="0" Grid.Column="1">
+                    <TextBox x:Name="tbIpAddress" HorizontalAlignment="Left" Margin="0,6,0,0" Text="192.168.4.1" TextWrapping="Wrap"  Width="120"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Grid.Column="1">
+                    <Label x:Name="lblDeviceNameInfo" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                </StackPanel>
+                <StackPanel Grid.Row="3" Grid.Column="1">
+                    <Label x:Name="lblProductInfo"  HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                </StackPanel>
+                <StackPanel Grid.Row="4" Grid.Column="1">
+                    <Label x:Name="lblApiLevelInfo"  HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+        <GroupBox Header="LIGHTING" Margin="10,10,0,10" Grid.Row="1" Grid.Column="0">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="btnGetState" Content="Get state" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" Click="btnGetState_Click"/>
+                <Button x:Name="btnSetState" Content="Set state" HorizontalAlignment="Left" Margin="100,0,0,0" VerticalAlignment="Top" Click="btnSetState_Click"/>
+            </StackPanel>
+        </GroupBox>
 
     </Grid>
 </Window>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -76,10 +77,20 @@ namespace LightBoxGUI
             try
             {
                 var myDevice = await controller.getState(httpUri);
-                StringBuilder sb = new StringBuilder(myDevice.rgbw.currentColor, 7);
+                //StringBuilder sb = new StringBuilder(myDevice.rgbw.currentColor, 7);
 
                 lblCurrentColor.Content = myDevice.rgbw.currentColor;
-                lblCurrentColor.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#aa0000");//luminosity + rgb
+                var colArrayRgbw = myDevice.rgbw.currentColor.ToCharArray();
+                char[] colArrayWrgb = colArrayRgbw;
+                colArrayWrgb[0] = colArrayRgbw.Last();
+                colArrayWrgb[1] = colArrayRgbw[colArrayRgbw.Length - 2];
+                colArrayWrgb[colArrayWrgb.Length - 2] = colArrayRgbw[1];
+                colArrayWrgb[colArrayWrgb.Length - 1] = colArrayRgbw[2];
+                var stringColor = colArrayWrgb.ToString();
+                stringColor.Insert(0, "#");
+                Trace.WriteLine(stringColor);
+
+                //lblCurrentColor.Background = (SolidColorBrush)new BrushConverter().ConvertFrom(stringColor);//luminosity + rgb
             }
             catch (HttpRequestException)
             {
@@ -89,7 +100,7 @@ namespace LightBoxGUI
         }
         private void btnSetState_Click(object sender, RoutedEventArgs e)
         {
-
+            System.Drawing.Color desColor = System.Drawing.Color.FromName(cmbDesiredColor.SelectedItem.ToString());
             //RootDeviceStateSet myDevState = new();
 
             try

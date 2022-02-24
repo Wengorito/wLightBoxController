@@ -48,7 +48,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="0" Grid.Column="1">
-                    <TextBox x:Name="tbIpAddress" HorizontalAlignment="Left" Margin="0,6,0,0" Text="192.168.4.1" TextWrapping="Wrap"  Width="80" TextAlignment="Center"/>
+                    <TextBox x:Name="tbIpAddress" HorizontalAlignment="Left" Margin="0,6,0,0" Text="192.168.0.23" TextWrapping="Wrap"  Width="80" TextAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="1">
                     <Label x:Name="lblDeviceNameInfo" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>
@@ -93,7 +93,17 @@
                     <Button x:Name="btnSetState" Content="Set state" Margin="0,0,0,0" HorizontalAlignment="Center" Click="btnSetState_Click"/>
                 </StackPanel>
                 <StackPanel Grid.Row="1" Grid.Column="1">
-                    <ComboBox x:Name="cmbDesiredColor" HorizontalAlignment="Center" Margin="0,6,0,0" Width="80" />
+                    <ComboBox x:Name="cmbDesiredColor" HorizontalAlignment="Center" Margin="0,6,0,0" Width="80">
+                        <ComboBoxItem Content="Red" Background="Red"></ComboBoxItem>
+                        <ComboBoxItem Content="Grün" Background="Green"></ComboBoxItem>
+                        <ComboBoxItem Content="Blau" Background="Blue"></ComboBoxItem>
+                        <ComboBoxItem Content="Gelb" Background="Yellow"></ComboBoxItem>
+                        <ComboBoxItem Content="Orangen" Background="Orange"></ComboBoxItem>
+                        <ComboBoxItem Content="Violett" Background="Violet"></ComboBoxItem>
+                        <ComboBoxItem Content="Weiß" Background="White"></ComboBoxItem>
+                    </ComboBox>
+
+
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="1">
                     <TextBox x:Name="tbDesiredEffect" HorizontalAlignment="Center" Margin="0,6,0,0"  TextWrapping="Wrap"  Width="80" TextAlignment="Center"/>

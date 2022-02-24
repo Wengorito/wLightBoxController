@@ -76,11 +76,16 @@ namespace LightBoxGUI
             try
             {
                 var myDevice = await controller.getState(httpUri);
+                StringBuilder sb = new StringBuilder(myDevice.rgbw.currentColor, 7);
+
+                lblCurrentColor.Content = myDevice.rgbw.currentColor;
+                lblCurrentColor.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#aa0000");//luminosity + rgb
             }
-            catch (Exception)
+            catch (HttpRequestException)
             {
                 MessageBox.Show("Set IP first");
             }
+            
         }
         private void btnSetState_Click(object sender, RoutedEventArgs e)
         {

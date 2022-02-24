@@ -214,7 +214,7 @@ namespace LightBoxController
                 Trace.WriteLine("Host not responding"); //to trzebe przekazac "wyzej", do GUI
             }
             //throw jakis dac i w metodzie ktora wola lapac, finally na pozioie ui shandlwoac i komunikowac
-            try
+            /*try
             {
                 var content = await client.GetStringAsync(requestUri);
 
@@ -224,7 +224,7 @@ namespace LightBoxController
             {
                 Trace.WriteLine("Exception Caught!");
                 Trace.WriteLine("Message :{0} ", e.Message);
-            }
+            }*/
 
             try
             {
@@ -256,10 +256,10 @@ namespace LightBoxController
             }
             return new RootDeviceStateGet
             {
-
+                rgbw = rootStateObj.rgbw                
             };
-        }
 
+        }
         public async void setState(string httpUri)//, RootDeviceStateSet rootStateObj)
         {
             //pobrac z guia parametry
@@ -281,7 +281,7 @@ namespace LightBoxController
 
 
             Trace.WriteLine(myRgbw.currentColor);
-            myRgbw.desiredColor = "255255";
+            myRgbw.desiredColor = "ff00000ff";
             //myRgbw.desiredColor = "ff--301200";
             //myRgbw.durationsMs.colorFade = 1000;
             Trace.WriteLine(myRgbw.desiredColor);

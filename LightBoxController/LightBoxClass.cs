@@ -84,6 +84,21 @@ namespace LightBoxController
         /// <param name="obj"></param>
         /// <returns></returns>
 
+        public static String HexConverter(System.Drawing.Color c)
+        {
+            String rtn = String.Empty;
+            try
+            {
+                rtn = "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
+            }
+            catch (Exception ex)
+            {
+                //doing nothing
+            }
+
+            return rtn;
+        }
+
         //niepotrzebna jednak
         private static void ParseIP(string ipAddress)
         {
@@ -256,11 +271,11 @@ namespace LightBoxController
             }
             return new RootDeviceStateGet
             {
-                rgbw = rootStateObj.rgbw                
+                rgbw = rootStateObj.rgbw
             };
 
         }
-        public async void setState(string httpUri)//, RootDeviceStateSet rootStateObj)
+        public async void setState(string httpUri, string colour)//, RootDeviceStateSet rootStateObj)
         {
             //pobrac z guia parametry
             //wpisac do objektu
@@ -268,6 +283,11 @@ namespace LightBoxController
             //wyslac do device
 
             string requestUri = httpUri + "/api/rgbw/set";
+
+            string colourWRGB = colour.Remove(0, 1);
+            colourWRGB.Insert(0, "aa");
+
+
 
             RootDeviceStateSet myDevState = new RootDeviceStateSet();
             Rgbw myRgbw = new();
@@ -277,18 +297,17 @@ namespace LightBoxController
             //rootdevicestateset.builder().rgbw.colorMode
 
 
-            //bottom up
+            //bottom up (json chyba)
 
 
-            Trace.WriteLine(myRgbw.currentColor);
-            myRgbw.desiredColor = "ff00000ff";
-            //myRgbw.desiredColor = "ff--301200";
+
+            Trace.WriteLine("current color: " + myRgbw.currentColor);
+            myRgbw.desiredColor = colourWRGB;
+            //myRgbw.desiredColor = "ff301200";
             //myRgbw.durationsMs.colorFade = 1000;
-            Trace.WriteLine(myRgbw.desiredColor);
+            Trace.WriteLine("desired color: " + myRgbw.desiredColor);
 
             myDevState.rgbw = myRgbw;
-
-            Trace.WriteLine(myDevState.rgbw.colorMode);
 
             //myDevState.rgbw.desiredColor = "ff--301200";
             //myDevState.rgbw.durationsMs.colorFade = 1000;

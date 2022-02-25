@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -34,9 +35,18 @@ namespace LightBoxGUI
         public MainWindow()
         {
             InitializeComponent();
+            InitializeComboBox();
 
             //controller.getInfo();
             //controller.getState();
+        }
+        private void InitializeComboBox()
+        {
+            foreach (var key in ConfigurationManager.AppSettings.AllKeys)
+            {
+                cmbColorList.Items.Add(ConfigurationManager.AppSettings.Get(key));
+            }
+            //dictionary?
         }
         private void btnSetIP_Click(object sender, RoutedEventArgs e)
         {
@@ -77,35 +87,67 @@ namespace LightBoxGUI
             try
             {
                 var myDevice = await controller.getState(httpUri);
-                //StringBuilder sb = new StringBuilder(myDevice.rgbw.currentColor, 7);
 
-                lblCurrentColor.Content = myDevice.rgbw.currentColor;
                 var colArrayRgbw = myDevice.rgbw.currentColor.ToCharArray();
-                char[] colArrayWrgb = colArrayRgbw;
+                Trace.WriteLine("my color string: " + myDevice.rgbw.currentColor);
+
+                char[] colArrayWrgb = new char[6];
+                Array.Copy(colArrayRgbw, colArrayWrgb, 6);
+
+                colArrayWrgb[colArrayWrgb.Length - 1] = colArrayRgbw.First();
+                colArrayWrgb[colArrayWrgb.Length - 2] = colArrayRgbw[1];
+                 
                 colArrayWrgb[0] = colArrayRgbw.Last();
                 colArrayWrgb[1] = colArrayRgbw[colArrayRgbw.Length - 2];
-                colArrayWrgb[colArrayWrgb.Length - 2] = colArrayRgbw[1];
-                colArrayWrgb[colArrayWrgb.Length - 1] = colArrayRgbw[2];
-                var stringColor = colArrayWrgb.ToString();
-                stringColor.Insert(0, "#");
-                Trace.WriteLine(stringColor);
+                string stringColor = new string(colArrayWrgb);
+                string colorHashWrgb = stringColor.Insert(0, "#");
 
-                //lblCurrentColor.Background = (SolidColorBrush)new BrushConverter().ConvertFrom(stringColor);//luminosity + rgb
+                Trace.WriteLine("Twoj kolor: " + colorHashWrgb);
+
+                lblCurrentColor.Content = myDevice.rgbw.currentColor;
+                var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(colorHashWrgb);
+                var brushes = Brushes.Yellow;
+                lblCurrentColor.Background = colour;//luminosity + rgb
             }
             catch (HttpRequestException)
             {
                 MessageBox.Show("Set IP first");
             }
             
+        } 
+        public static String HexConverter(System.Drawing.Color c)
+        {
+            String rtn = String.Empty;
+            try
+            {
+                rtn = "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
+            }
+            catch (Exception ex)
+            {
+                //doing nothing
+            }
+
+            return rtn;
         }
+
         private void btnSetState_Click(object sender, RoutedEventArgs e)
         {
-            System.Drawing.Color desColor = System.Drawing.Color.FromName(cmbDesiredColor.SelectedItem.ToString());
+            //string col = cmbColorList.SelectedValue.ToString();
+
+            System.Drawing.Color colour = System.Drawing.Color.FromName(cmbColorList.SelectedItem.ToString());
             //RootDeviceStateSet myDevState = new();
+            //var desCol = tbDesiredColour.Text;
+            //var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(colorHashWrgb);
+
+            //System.Drawing.Color colour = System.Drawing.Color.FromName(tbDesiredColour.Text);
+            //aplha czanel?
+            //System.Drawing.Color colour = System.Drawing.Color.FromName(col);
+            //var colourHex = ColorTranslator.ToHtml(colour);
+            string colHex = HexConverter(colour);
 
             try
             {
-                controller.setState(httpUri);//, myDevState);
+                controller.setState(httpUri, colHex);//, myDevState);
             }
             catch (Exception)
             {

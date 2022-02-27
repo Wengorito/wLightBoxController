@@ -25,15 +25,20 @@ namespace LightBoxController
     //https://stackoverflow.com/questions/6507889/how-to-ignore-a-property-in-class-if-null-using-json-net
 
     #region
+    //wzorzec projektowy builder
+    //fluent api
+    //rootdevicestateset.builder().rgbw.colorMode
+    //bottom up
+
     //poszukac jakiejs ladnego builder (lombok w javie)
- //   PostRepresentation.builder()
-	//.rgbw
-	//	.desiredColor("ff00300000")
-	//	.durationMs
-	//		.colorFade(1000)
-	//		.build()
-	//	.build()
-	//.build();
+    //   PostRepresentation.builder()
+    //.rgbw
+    //	.desiredColor("ff00300000")
+    //	.durationMs
+    //		.colorFade(1000)
+    //		.build()
+    //	.build()
+    //.build();
     public class Device
     {
         public string deviceName { get; set; }
@@ -76,6 +81,8 @@ namespace LightBoxController
     #endregion
     public class LightBoxClass
     {
+        private static readonly HttpClient client = new HttpClient();
+
         /*********helper methods***********/
         /// <summary>
         /// co robi?
@@ -98,46 +105,7 @@ namespace LightBoxController
 
             return rtn;
         }
-
-        //niepotrzebna jednak
-        private static void ParseIP(string ipAddress)
-        {
-            try
-            {
-                // Create an instance of IPAddress for the specified address string (in
-                // dotted-quad, or colon-hexadecimal notation).
-                IPAddress address = IPAddress.Parse(ipAddress);
-
-                // Display the address in standard notation.
-                Trace.WriteLine("Parsing your input string: " + "\"" + ipAddress + "\"" + " produces this address (shown in its standard notation): " + address.ToString());
-            }
-
-            catch (ArgumentNullException e)
-            {
-                Console.WriteLine("ArgumentNullException caught!!!");
-                Console.WriteLine("Source : " + e.Source);
-                Console.WriteLine("Message : " + e.Message);
-            }
-
-            catch (FormatException e)
-            {
-                Console.WriteLine("FormatException caught!!!");
-                Console.WriteLine("Source : " + e.Source);
-                Console.WriteLine("Message : " + e.Message);
-            }
-
-            catch (Exception e)
-            {
-                Console.WriteLine("Exception caught!!!");
-                Console.WriteLine("Source : " + e.Source);
-                Console.WriteLine("Message : " + e.Message);
-            }
-        }
-        /***************************/
-
-        private static readonly HttpClient client = new HttpClient();
-
-    
+            
         //trzeba jakos przeskanowac urzadzenia ip dostepne
         public async Task<Device> getInfo(string httpUri)
         {
@@ -214,7 +182,7 @@ namespace LightBoxController
             }*/
         }
         RootDeviceStateGet rootStateObj = new();
-        public async Task<RootDeviceStateGet> getState(string httpUri)
+        public async Task<RootDeviceStateGet> getStateAsync(string httpUri)
         {
             string requestUri = httpUri + "/api/rgbw/state";
             //_ = new RootDeviceStateGet();
@@ -229,17 +197,6 @@ namespace LightBoxController
                 Trace.WriteLine("Host not responding"); //to trzebe przekazac "wyzej", do GUI
             }
             //throw jakis dac i w metodzie ktora wola lapac, finally na pozioie ui shandlwoac i komunikowac
-            /*try
-            {
-                var content = await client.GetStringAsync(requestUri);
-
-                Trace.WriteLine("\ntu poczatek get state:\n" + content);
-            }
-            catch (HttpRequestException e)
-            {
-                Trace.WriteLine("Exception Caught!");
-                Trace.WriteLine("Message :{0} ", e.Message);
-            }*/
 
             try
             {
@@ -250,7 +207,16 @@ namespace LightBoxController
                 {
                     string name = descriptor.Name;
                     object value = descriptor.GetValue(rootStateObj.rgbw);
-                    Trace.WriteLine($"{name} = {value}");
+                    if (name == "durationsMs")
+                    {
+                        foreach (PropertyDescriptor descriptor1 in TypeDescriptor.GetProperties(rootStateObj.rgbw.durationsMs))
+                        {
+                            string name1 = descriptor1.Name;
+                            object value1 = descriptor1.GetValue(rootStateObj.rgbw.durationsMs);
+                            Trace.WriteLine($"{name1} = {value1}");
+                        }
+                    }
+                    else Trace.WriteLine($"{name} = {value}");
                 }
             }
             catch (HttpRequestException e)
@@ -275,7 +241,15 @@ namespace LightBoxController
             };
 
         }
-        public async void setState(string httpUri, string colour)//, RootDeviceStateSet rootStateObj)
+        private string applyDim(string col, int sub,  int dim)
+        {
+            string hexComponent = col.Substring(sub, 2);
+            int intComponent = int.Parse(hexComponent, System.Globalization.NumberStyles.HexNumber);
+            intComponent = intComponent * dim / 100;
+            hexComponent = intComponent.ToString("X2");
+            return hexComponent;
+        }
+        public async Task setColorAsync(string httpUri, string colour, int dim)//, RootDeviceStateSet rootStateObj)
         {
             //pobrac z guia parametry
             //wpisac do objektu
@@ -283,34 +257,31 @@ namespace LightBoxController
             //wyslac do device
 
             string requestUri = httpUri + "/api/rgbw/set";
+            //remove '#'
+            colour = colour.Remove(0, 3);
+            colour = string.Concat(
+                applyDim(colour, 0, dim),
+                applyDim(colour, 2, dim),
+                applyDim(colour, 4, dim));
 
-            string colourWRGB = colour.Remove(0, 1);
-            colourWRGB.Insert(0, "aa");
-
-
+            colour = colour.Insert(6, "ff");
 
             RootDeviceStateSet myDevState = new RootDeviceStateSet();
             Rgbw myRgbw = new();
-
-            //wzorzec projektowy builder
-            //fluent api
-            //rootdevicestateset.builder().rgbw.colorMode
+            DurationsMs myDuration = new();
 
 
-            //bottom up (json chyba)
 
 
+            //bottom up
 
             Trace.WriteLine("current color: " + myRgbw.currentColor);
-            myRgbw.desiredColor = colourWRGB;
-            //myRgbw.desiredColor = "ff301200";
+            myRgbw.desiredColor = colour;
             //myRgbw.durationsMs.colorFade = 1000;
             Trace.WriteLine("desired color: " + myRgbw.desiredColor);
-
+            myDuration.colorFade = 5000;
+            myRgbw.durationsMs = myDuration;
             myDevState.rgbw = myRgbw;
-
-            //myDevState.rgbw.desiredColor = "ff--301200";
-            //myDevState.rgbw.durationsMs.colorFade = 1000;
 
             //może trzeba pobrać get najpierw i do tego obiektu powpisywac?
 
@@ -323,6 +294,19 @@ namespace LightBoxController
 
             HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
             await client.PostAsync(requestUri, httpContent);
+        }
+        public void SetEffect(string httpUri, int effectId)
+        {
+            string requestUri = httpUri + "/api/rgbw/set";
+            RootDeviceStateSet myDevState = new RootDeviceStateSet();
+            Rgbw myRgbw = new();
+            DurationsMs myDuration = new();
+            myRgbw.effectID = effectId;
+            myDuration.effectStep = 500;
+            myDevState.rgbw = myRgbw;
+            string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(myDevState);
+            HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
+            client.PostAsync(requestUri, httpContent);
         }
     }
 }

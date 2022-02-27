@@ -16,7 +16,8 @@ namespace LightBoxController
         Red = 1,
         Blue = 2,
         Green = 3        
-    }    
+    } 
+    
     //public enum ColourCodes
     //{
     //    "#ffff0000" = 1,

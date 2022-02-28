@@ -14,31 +14,11 @@ using System.Windows;
 
 namespace LightBoxController
 {
-    //osoban klaska
-    //Model: get representation
-
-    //enumy na kolory i mody
-
-    //library przerzucac bledy htttp do ui (poszukac biblioteki enum z bledami http)
-
-    //rester do firefox
-    //https://stackoverflow.com/questions/6507889/how-to-ignore-a-property-in-class-if-null-using-json-net
-
     #region
+    //Model: get representation
     //wzorzec projektowy builder
     //fluent api
-    //rootdevicestateset.builder().rgbw.colorMode
     //bottom up
-
-    //poszukac jakiejs ladnego builder (lombok w javie)
-    //   PostRepresentation.builder()
-    //.rgbw
-    //	.desiredColor("ff00300000")
-    //	.durationMs
-    //		.colorFade(1000)
-    //		.build()
-    //	.build()
-    //.build();
     public class Device
     {
         public string deviceName { get; set; }
@@ -54,7 +34,6 @@ namespace LightBoxController
     {
         public Device device { get; set; }
     }
-
     public class DurationsMs
     {
         public int colorFade { get; set; }
@@ -79,11 +58,11 @@ namespace LightBoxController
         public Rgbw rgbw { get; set; }
     }
     #endregion
+
     public class LightBoxClass
     {
         private static readonly HttpClient client = new HttpClient();
 
-        /*********helper methods***********/
         /// <summary>
         /// co robi?
         /// </summary>
@@ -106,15 +85,10 @@ namespace LightBoxController
             return rtn;
         }
             
-        //trzeba jakos przeskanowac urzadzenia ip dostepne
         public async Task<Device> getInfo(string httpUri)
         {
             string requestUri = httpUri + "/info";
             RootDevice rootDevObj = new RootDevice();
-            //EXCEPTIONS
-            //może to ten client rzuca błędami?
-            //jak to do gui przekazac?
-            //enum errrcode?
             HttpResponseMessage result;
             try
             {
@@ -123,17 +97,11 @@ namespace LightBoxController
             }
             catch (HttpRequestException)
             {
-                Trace.WriteLine("Host not responding"); //to trzebe przekazac "wyzej", do GUI
-                //return result.StatusCode;
-                //return Task<Device>(null);
-
-                //POMOCY Z TYMI ERRORAMI
-                //JAK WYkOKRZystac te domyslne
+                Trace.WriteLine("Host not responding");
             }
             try
             {
                 string responseBody = await client.GetStringAsync(requestUri);
-                //korzystać z default
                 rootDevObj = JsonSerializer.Deserialize<RootDevice>(responseBody);
 
                 foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevObj.device))
@@ -150,6 +118,7 @@ namespace LightBoxController
                 Trace.WriteLine("Source : " + e.Source);
                 Trace.WriteLine("Message : " + e.Message);
 
+                return new Device();
             }
             catch (InvalidOperationException)
             {
@@ -159,33 +128,17 @@ namespace LightBoxController
             {
                 Trace.WriteLine("Timeout reached");
             }
-
-            //    foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevObj.device))
-            //    {
-            //        string name = descriptor.Name;
-            //        object value = descriptor.GetValue(rootDevObj.device);
-            //        Trace.WriteLine($"{name} = {value}");
-            //    }
-            //wywala przy nieudanej probie polaecznia
             return new Device 
             { 
                 deviceName = rootDevObj.device.deviceName, 
                 product = rootDevObj.device.product, 
                 apiLevel = rootDevObj.device.apiLevel
             };
-
-            /*Type t = rootDevObj.device.GetType(); // Where obj is object whose properties you need.
-            PropertyInfo[] pi = t.GetProperties();
-            foreach (PropertyInfo p in pi)
-            {
-                Trace.WriteLine(p.Name + " : " + p.GetValue(rootDevObj.device));
-            }*/
         }
         RootDeviceStateGet rootStateObj = new();
         public async Task<RootDeviceStateGet> getStateAsync(string httpUri)
         {
             string requestUri = httpUri + "/api/rgbw/state";
-            //_ = new RootDeviceStateGet();
             HttpResponseMessage result;
             try
             {
@@ -196,8 +149,7 @@ namespace LightBoxController
             {
                 Trace.WriteLine("Host not responding"); //to trzebe przekazac "wyzej", do GUI
             }
-            //throw jakis dac i w metodzie ktora wola lapac, finally na pozioie ui shandlwoac i komunikowac
-
+            //throw
             try
             {
                 string responseBody = await client.GetStringAsync(requestUri);
@@ -225,7 +177,6 @@ namespace LightBoxController
                 Trace.WriteLine("ArgumentNullException caught!!!");
                 Trace.WriteLine("Source : " + e.Source);
                 Trace.WriteLine("Message : " + e.Message);
-
             }
             catch (InvalidOperationException)
             {
@@ -239,7 +190,6 @@ namespace LightBoxController
             {
                 rgbw = rootStateObj.rgbw
             };
-
         }
         private string applyDim(string col, int sub,  int dim)
         {
@@ -251,13 +201,8 @@ namespace LightBoxController
         }
         public async Task setColorAsync(string httpUri, string colour, int dim)//, RootDeviceStateSet rootStateObj)
         {
-            //pobrac z guia parametry
-            //wpisac do objektu
-            //serializowac do jsona
-            //wyslac do device
-
             string requestUri = httpUri + "/api/rgbw/set";
-            //remove '#'
+            //remove '#' & white - TODO colorModes
             colour = colour.Remove(0, 3);
             colour = string.Concat(
                 applyDim(colour, 0, dim),
@@ -270,32 +215,16 @@ namespace LightBoxController
             Rgbw myRgbw = new();
             DurationsMs myDuration = new();
 
-
-
-
-            //bottom up
-
-            Trace.WriteLine("current color: " + myRgbw.currentColor);
             myRgbw.desiredColor = colour;
-            //myRgbw.durationsMs.colorFade = 1000;
-            Trace.WriteLine("desired color: " + myRgbw.desiredColor);
-            myDuration.colorFade = 5000;
+            myDuration.colorFade = 2000;
             myRgbw.durationsMs = myDuration;
             myDevState.rgbw = myRgbw;
 
-            //może trzeba pobrać get najpierw i do tego obiektu powpisywac?
-
-            //rootStateObj.rgbw.colorMode = 4;
-            //Trace.WriteLine(rootStateObj.rgbw.colorMode);
-
-            //czy mozna ustawic deffaultowe zachowenia serializerwoi
             string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(myDevState);
-            Trace.WriteLine(stateJson);
-
             HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
             await client.PostAsync(requestUri, httpContent);
         }
-        public void SetEffect(string httpUri, int effectId)
+        public void setEffect(string httpUri, int effectId)
         {
             string requestUri = httpUri + "/api/rgbw/set";
             RootDeviceStateSet myDevState = new RootDeviceStateSet();

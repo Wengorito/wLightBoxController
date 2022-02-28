@@ -29,31 +29,14 @@ namespace LightBoxGUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        public string ipAddress { get; set; }
-        public string httpUri { get; set; }
+        private string ipAddress { get; set; }
+        private string httpUri { get; set; }
 
-        public LightBoxClass controller = new LightBoxClass();
-
-        BackgroundWorker MyWorker = new ();
-
-        private Timer timerStateUpdate;
+        private LightBoxClass controller = new LightBoxClass();
 
         DispatcherTimer dTimer = new DispatcherTimer();
 
-
-
-        public class ComboBoxColors
-        {
-            public string _Key { get; set; }
-            public System.Windows.Media.Color _Value { get; set; }
-
-            public ComboBoxColors(string _key, System.Windows.Media.Color _value)
-            {
-                _Key = _key;
-                _Value = _value;
-            }
-        }
-        public class ComboBoxEffects
+        private class ComboBoxEffects
         {
             public string _Key { get; set; }
             public int _Value { get; set; }
@@ -64,80 +47,19 @@ namespace LightBoxGUI
                 _Value = _value;
             }
         }
-
-        public class LightingSettings
-        {
-            public System.Windows.Media.Color? _Colour { get; set; }
-            public int _Mode { get; set; }
-            public LightingSettings(System.Windows.Media.Color? _colour)
-            {
-                _Colour = _colour;
-            }
-        }
-        //not very elegant
-        public System.Windows.Media.Color? clr;
+        
+        private System.Windows.Media.Color? clr;
         
         public MainWindow()
         {
             InitializeComponent();
             InitializeComboBox();
-            ComboBoxColors cbp = (ComboBoxColors)cmbColor.SelectedItem;
-            clr = cbp._Value;
-            MyWorker.DoWork += MyWorker_DoWork;
-            dTimer.Interval = TimeSpan.FromMilliseconds(200);
+            dTimer.Interval = TimeSpan.FromMilliseconds(100);
             dTimer.Tick += dTimer_Tick;
-
-            //LightingSettings ledSet = new LightingSettings(clrPcker.SelectedColor);
-            //controller.getInfo();
-            //controller.getState();
-        }
-        async void dTimer_Tick(object sender, EventArgs e)
-        {
-            try
-            {
-                var myDevice = await controller.getStateAsync(httpUri);
-
-                //odbieramy kolor w formacie RGBW
-                var colArrayRgbw = myDevice.rgbw.currentColor.ToCharArray();
-
-                char[] colArrayArgb = new char[6];
-                Array.Copy(colArrayRgbw, colArrayArgb, 6);
-
-
-                string stringColor = new string(colArrayArgb);
-                string colorHashWrgb = stringColor.Insert(0, "#");
-
-                Trace.WriteLine("Odebrany kolor: " + colorHashWrgb);
-
-                lblCurrentColor.Content = myDevice.rgbw.currentColor;
-                var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(colorHashWrgb);
-                var brushes = Brushes.Yellow;
-                rctColor.Fill = colour;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Source : " + ex.Source + "\nMessage : " + ex.Message);
-            }
-        }
-        private void MyWorker_DoWork(object Sender, DoWorkEventArgs e)
-        {
-
         }
         private void InitializeComboBox()
         {
-            List<ComboBoxColors> cbColList = new List<ComboBoxColors>();
-
-            cbColList.Add(new ComboBoxColors("Rot", System.Windows.Media.Color.FromArgb(255,255,0,0)));
-            cbColList.Add(new ComboBoxColors("Grun", System.Windows.Media.Color.FromArgb(255, 0, 255, 0)));
-            cbColList.Add(new ComboBoxColors("Blau", System.Windows.Media.Color.FromArgb(255, 0, 0, 255)));
-
-            cmbColor.DisplayMemberPath = "_Key";
-            cmbColor.SelectedValuePath = "_Value";
-            cmbColor.ItemsSource = cbColList;
-            cmbColor.SelectedIndex = 0;
-
             List<ComboBoxEffects> cbEffList = new List<ComboBoxEffects>();
-
             cbEffList.Add(new ComboBoxEffects("Chill", 1));
             cbEffList.Add(new ComboBoxEffects("Disco", 2));
             cbEffList.Add(new ComboBoxEffects("Techno", 3));
@@ -147,147 +69,150 @@ namespace LightBoxGUI
             cmbEffect.ItemsSource = cbEffList;
             cmbEffect.SelectedIndex = 0;
         }
-        private void btnSetIP_Click(object sender, RoutedEventArgs e)
+        private void dTimer_Tick(object sender, EventArgs e)
         {
-            //traje i kacze WSZEDZIE
-            //see if entered IP is valid
+            getState(sender, e);
+        }
+        private void btnSetIp_Click(object sender, RoutedEventArgs e)
+        {
             ipAddress = tbIpAddress.Text;
             IPAddress ip;
             bool ValidateIP = IPAddress.TryParse(ipAddress, out ip);
             if (ValidateIP)
             {
                 httpUri = string.Concat("http://", ipAddress);
-                Trace.WriteLine($"IP add set as {tbIpAddress.Text}");
-                dTimer.Start();
+                Trace.WriteLine($"IP address set: {tbIpAddress.Text}");
+                btnSetIp.Background = Brushes.Green;
             }
             else
                 MessageBox.Show("This is not a valid ip address. Re-enter");
 
-            //ewentualnie arp i z listy
+            //find avaiable ip devices
         }
         private async void btnDeviceInfo_Click(object sender, RoutedEventArgs e)
         {
-            //ErrorCode ErrorWrapper
-            //jak zly ip to nie ma obiektu i wywala wyjatek - jak sie zabepieczyc?
             try
             {
                 var myDevice = await controller.getInfo(httpUri);
-                lblDeviceNameInfo.Content = myDevice.deviceName;// obj.device.deviceName;
-                lblProductInfo.Content = myDevice.product;// obj.device.deviceName;
-                lblApiLevelInfo.Content = myDevice.apiLevel;// obj.device.deviceName;
+                lblDeviceNameInfo.Content = myDevice.deviceName;
+                lblProductInfo.Content = myDevice.product;
+                lblApiLevelInfo.Content = myDevice.apiLevel;
             }
             catch (Exception)
             {
                 MessageBox.Show("Set IP first");
             }
         }
-        private async void btnGetState_Click(object sender, EventArgs e)
+        private async void getState(object sender, EventArgs e)
         {
             try
             {
                 var myDevice = await controller.getStateAsync(httpUri);
-
-                //odbieramy kolor w formacie RGBW
-                var colArrayRgbw = myDevice.rgbw.currentColor.ToCharArray();
-
-                /*for (int i = colArrayRgbw.Length - 2; i > 1; i--)
-                {
-                    colArrayRgbw[i] = colArrayRgbw[i - 2];
-                }
-                colArrayRgbw[0] =  'f';
-                colArrayRgbw[1] = 'f';*/
-
-                char[] colArrayArgb = new char[6];
-                Array.Copy(colArrayRgbw, colArrayArgb, 6);
-
-                /*colArrayArgb[colArrayArgb.Length - 1] = colArrayRgbw.First();
-                colArrayArgb[colArrayArgb.Length - 2] = colArrayRgbw[1];
-                 
-                colArrayArgb[0] = colArrayRgbw.Last();
-                colArrayArgb[1] = colArrayRgbw[colArrayRgbw.Length - 2];*/
-                string stringColor = new string(colArrayArgb);
-                string colorHashWrgb = stringColor.Insert(0, "#");
-
-                Trace.WriteLine("Odebrany kolor: " + colorHashWrgb);
-
-                lblCurrentColor.Content = myDevice.rgbw.currentColor;
-                var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(colorHashWrgb);
-                var brushes = Brushes.Yellow;
+                string rgbColor = myDevice.rgbw.currentColor.Remove(6, 2);
+                rgbColor = rgbColor.Insert(0, "#");
+                Trace.WriteLine("Odebrany kolor: " + rgbColor);
+                var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(rgbColor);
                 rctColor.Fill = colour;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Set IP first\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                MessageBox.Show("Device unreachable\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
             }
 
         }
-        public static String HexConverter(System.Drawing.Color c)
+
+        private async void setState(object sender, EventArgs e)
         {
-            String rtn = String.Empty;
-            try
+            if (tgbToggle.IsChecked == true)
             {
-                rtn = "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
+                try
+                {
+                    string colHue = clr.ToString();
+                    int colValue = (int)sldValueHsv.Value;
+                    await controller.setColorAsync(httpUri, colHue, colValue);
+                    lblCurrentEffect.Content = "";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Set IP first\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                //doing nothing
-            }
-
-            return rtn;
-        }
-
-        private async void btnSetState_Click(object sender, EventArgs e)
-        {
-            //string col = cmbColor.SelectedValue.ToString();
-            try
-            {
-                string colHue = clr.ToString();
-                int colValue = (int)sldValueHsv.Value;
-                //System.Drawing.Color colour = System.Drawing.Color.FromName(cmbColor.SelectedItem.ToString());
-                //RootDeviceStateSet myDevState = new();
-                //var desCol = tbDesiredColour.Text;
-                //var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(colorHashWrgb);
-
-                //System.Drawing.Color colour = System.Drawing.Color.FromName(tbDesiredColour.Text);
-                //aplha czanel?
-                //System.Drawing.Color colour = System.Drawing.Color.FromName(col);
-                //var colourHex = ColorTranslator.ToHtml(colour);
-                //string colHex = HexConverter(colour);
-                await controller.setColorAsync(httpUri, colHue, colValue);//, myDevState);
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Set IP first\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                MessageBox.Show("Turn on the device");
             }
         }
         private void sldValueHsv_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            btnSetState_Click(sender, e);
-        }
-        private void cmbColor_DropDownClosed(object sender, EventArgs e)
-        {
-            ComboBoxColors cbp = (ComboBoxColors)cmbColor.SelectedItem;
-            clr = cbp._Value;
-            btnSetState_Click(sender, e);
-        }        
+        {            
+            setState(sender, e);
+        }       
         private void cmbEffect_DropDownClosed(object sender, EventArgs e)
         {
-            ComboBoxEffects cbe = (ComboBoxEffects)cmbEffect.SelectedItem;
-            controller.SetEffect(httpUri, cbe._Value);
-        }
 
-        private void ClrPcker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<System.Windows.Media.Color?> e)
-        {
-            //co sie dzieje przy szybkim przelaczeniu kolorow???
-            clr = clrPcker.SelectedColor;
-            btnSetState_Click(sender, e);
+            if (tgbToggle.IsChecked == true)
+            {
+                dTimer.Stop();
+                btnRead.IsChecked = false;
+                rctColor.Fill = Brushes.Gray;
+                ComboBoxEffects cbe = (ComboBoxEffects)cmbEffect.SelectedItem;
+                controller.setEffect(httpUri, cbe._Value);
+                lblCurrentEffect.Content = "Wow effect nr: " + cbe._Value;
+            }
+            else
+            {
+                MessageBox.Show("Turn on the device");
+            }
         }
-
         private void clrPcker_Closed(object sender, RoutedEventArgs e)
         {
-            //clr = clrPcker.SelectedColor;
-            //btnSetState_Click(sender, e);
+            if (clrPcker.SelectedColor.HasValue)
+            {
+                clr = clrPcker.SelectedColor;
+                setState(sender, e);
+            }
+        }
+        private void btnRead_Check(object sender, EventArgs e)
+        {
+            if (tgbToggle.IsChecked == true)
+            {
+                dTimer.Start();
+            }
+            else
+            {
+                btnRead.IsChecked = false;
+                MessageBox.Show("Turn on the device");
+            }
+        }
+        private void btnRead_Uncheck(object sender, EventArgs e)
+        {
+            dTimer.Stop();
+        }
+        private async void tgbToggle_Checked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var myDevice = await controller.getStateAsync(httpUri);
+                string rgbColor = myDevice.rgbw.lastOnColor.Remove(6, 2);
+                rgbColor = rgbColor.Insert(0, "#");
+                Trace.WriteLine("Odebrany kolor: " + rgbColor);
+                var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(rgbColor);
+                rctColor.Fill = colour;
+                clr = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(rgbColor);
+                btnRead_Check(sender, e);
+                btnRead.IsChecked = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Device unreachable\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+            }
+
+        }
+        private void tgbToggle_Unchecked(object sender, RoutedEventArgs e)
+        {
+            //TODO turn off the device, not sending black colour somehow..
+            dTimer.Stop();            
+            btnRead.IsChecked = false;
+            rctColor.Fill = Brushes.LightGray;
         }
     }
 }

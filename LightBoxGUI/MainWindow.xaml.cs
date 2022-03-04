@@ -89,7 +89,7 @@ namespace LightBoxGUI
 
             //find avaiable ip devices
         }
-        private async void btnDeviceInfo_Click(object sender, RoutedEventArgs e)
+        private async void btnGetInfo_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -103,24 +103,26 @@ namespace LightBoxGUI
                 MessageBox.Show("Set IP first");
             }
         }
-        private async void getState(object sender, EventArgs e)
+        private async Task getState(object sender, EventArgs e)
         {
             try
             {
                 var myDevice = await controller.getStateAsync(httpUri);
-                string rgbColor = myDevice.rgbw.currentColor.Remove(6, 2);
-                rgbColor = rgbColor.Insert(0, "#");
-                Trace.WriteLine("Odebrany kolor: " + rgbColor);
-                var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(rgbColor);
-                rctColor.Fill = colour;
+                if (myDevice.rgbw != null)
+                {
+                    string rgbColor = myDevice.rgbw.currentColor.Remove(6, 2);
+                    rgbColor = rgbColor.Insert(0, "#");
+                    Trace.WriteLine("Odebrany kolor: " + rgbColor);
+                    var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(rgbColor);
+                    rctColor.Fill = colour;
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Device unreachable\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                dTimer.Stop(); //so that the window won't pop up continously
+                MessageBox.Show("Error\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
             }
-
         }
-
         private async void setState(object sender, EventArgs e)
         {
             if (tgbToggle.IsChecked == true)
@@ -139,12 +141,15 @@ namespace LightBoxGUI
             }
             else
             {
-                MessageBox.Show("Turn on the device");
+                MessageBox.Show("Toggle the device");
             }
         }
         private void sldValueHsv_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {            
             setState(sender, e);
+
+            if (btnRead.IsChecked == false)
+                btnRead.IsChecked = true;
         }       
         private void cmbEffect_DropDownClosed(object sender, EventArgs e)
         {
@@ -160,7 +165,7 @@ namespace LightBoxGUI
             }
             else
             {
-                MessageBox.Show("Turn on the device");
+                MessageBox.Show("Toggle the device");
             }
         }
         private void clrPcker_Closed(object sender, RoutedEventArgs e)
@@ -170,6 +175,8 @@ namespace LightBoxGUI
                 clr = clrPcker.SelectedColor;
                 setState(sender, e);
             }
+            if (btnRead.IsChecked == false)
+                btnRead.IsChecked = true;
         }
         private void btnRead_Check(object sender, EventArgs e)
         {
@@ -180,7 +187,7 @@ namespace LightBoxGUI
             else
             {
                 btnRead.IsChecked = false;
-                MessageBox.Show("Turn on the device");
+                MessageBox.Show("Toggle the device");
             }
         }
         private void btnRead_Uncheck(object sender, EventArgs e)
@@ -192,17 +199,26 @@ namespace LightBoxGUI
             try
             {
                 var myDevice = await controller.getStateAsync(httpUri);
-                string rgbColor = myDevice.rgbw.lastOnColor.Remove(6, 2);
-                rgbColor = rgbColor.Insert(0, "#");
-                Trace.WriteLine("Odebrany kolor: " + rgbColor);
-                var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(rgbColor);
-                rctColor.Fill = colour;
-                clr = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(rgbColor);
-                btnRead_Check(sender, e);
-                btnRead.IsChecked = true;
+                if (myDevice.rgbw != null)
+                {
+                    string rgbColor = myDevice.rgbw.lastOnColor.Remove(6, 2);
+                    rgbColor = rgbColor.Insert(0, "#");
+                    Trace.WriteLine("Odebrany kolor: " + rgbColor);
+                    var colour = (SolidColorBrush)new BrushConverter().ConvertFrom(rgbColor);
+                    rctColor.Fill = colour;
+                    clr = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(rgbColor);
+                    btnRead_Check(sender, e);
+                    btnRead.IsChecked = true;
+                }
+                else
+                {
+                    tgbToggle.IsChecked = false;
+                    MessageBox.Show("Device unreachable");
+                }
             }
             catch (Exception ex)
             {
+                tgbToggle.IsChecked = false;
                 MessageBox.Show("Device unreachable\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
             }
 
@@ -212,7 +228,7 @@ namespace LightBoxGUI
             //TODO turn off the device, not sending black colour somehow..
             dTimer.Stop();            
             btnRead.IsChecked = false;
-            rctColor.Fill = Brushes.LightGray;
+            rctColor.Fill = Brushes.Black;
         }
     }
 }

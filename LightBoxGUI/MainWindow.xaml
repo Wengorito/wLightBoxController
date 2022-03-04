@@ -36,7 +36,7 @@
                     <Button x:Name="btnSetIp" Content="Set IP" HorizontalAlignment="Center" Margin="0,5,0,0" Width="80" Click="btnSetIp_Click"/>
                 </StackPanel>
                 <StackPanel Grid.Row="1" Grid.Column="0">
-                    <Button x:Name="btnDeviceInfo" Content="Get info" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top" Width="80" Click="btnDeviceInfo_Click"/>
+                    <Button x:Name="btnGetInfo" Content="Get info" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top" Width="80" Click="btnGetInfo_Click"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="0">
                     <Label x:Name="lblDeviceName" Content="Device name:" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top" BorderThickness="1" BorderBrush="Aquamarine"/>
@@ -86,7 +86,7 @@
                     <Label x:Name="lblCurrentColor" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="0">
-                    <Rectangle x:Name="rctColor" HorizontalAlignment="Center" Height="50" Margin="0,0,0,0" Grid.Row="1" Stroke="Black" VerticalAlignment="Top" Width="50" />
+                    <Rectangle x:Name="rctColor" HorizontalAlignment="Center" Height="50" Margin="0,0,0,0" Grid.Row="1" Fill="Black" Stroke="Black" VerticalAlignment="Top" Width="50" />
                 </StackPanel>
                 <StackPanel Grid.Row="3" Grid.Column="0">
                     <Label x:Name="lbl" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top"/>

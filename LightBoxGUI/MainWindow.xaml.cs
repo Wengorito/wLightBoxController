@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,6 +24,8 @@ namespace LightBoxGUI
         private LightBoxClass controller = new LightBoxClass();
 
         DispatcherTimer dTimer = new DispatcherTimer();
+
+        Ping pingSender = new Ping();
 
         private class ComboBoxEffects
         {
@@ -71,11 +74,20 @@ namespace LightBoxGUI
             bool ValidateIP = IPAddress.TryParse(ipAddress, out ip);
             if (ValidateIP)
             {
-                httpUri = string.Concat("http://", ipAddress);
-                Trace.WriteLine($"IP address set: {tbIpAddress.Text}");
-                btnSetIp.Background = Brushes.Green;
-                btnGetInfo.IsEnabled = true;
-                tgbToggle.IsEnabled = true;
+                PingReply reply = pingSender.Send(ip, 2000);
+                if (reply.Status == IPStatus.Success)
+                {
+                    httpUri = string.Concat("http://", ipAddress);
+                    Trace.WriteLine($"IP address set: {tbIpAddress.Text}");
+                    btnSetIp.Background = Brushes.Green;
+                    btnGetInfo.IsEnabled = true;
+                    tgbToggle.IsEnabled = true;
+                }
+                else
+                {
+                    btnSetIp.Background = Brushes.Gray;
+                    MessageBox.Show("Selected IP device not available");
+                }
             }
             else
                 MessageBox.Show("This is not a valid ip address. Re-enter");

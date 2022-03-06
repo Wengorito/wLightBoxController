@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ObjectDumper.NET" Version="3.3.13" />
     <PackageReference Include="System.Text.Json" Version="6.0.2" />
   </ItemGroup>
 

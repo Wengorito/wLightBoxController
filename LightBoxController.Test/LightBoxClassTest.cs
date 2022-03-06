@@ -7,57 +7,71 @@ using System.Threading;
 
 namespace LightBoxController.Tests
 {
-    public class TestsFixture : IDisposable
+    public class LightBoxClassTest : IDisposable
     {
-        public TestsFixture()
-        {        
-            // Do "global" initialization here; Only called once.
-            LightBoxClass controller = new LightBoxClass();
+        LightBoxClass controller;
+        string httpUri;
 
+        public LightBoxClassTest()
+        {
+            controller = new LightBoxClass();
+            httpUri = "http://192.168.0.103";
         }
-
         public void Dispose()
         {
-            // Do "global" teardown here; Only called once.            
+            //controller.dispose();
         }
-    }
-    public class DummyTests : IClassFixture<TestsFixture>
-    {
-        public DummyTests(TestsFixture data)
-        {
-        }
-    }
-    public class LightBoxClassTest
-    {
-
 
         [Fact]
-        public async void IsEffectInRange_ReturnTrue()
+        public async Task EffectId_SetCorrectly_ReturnTrue()
         {
-            LightBoxClass controller = new LightBoxClass();
-            string httpUri = "http://192.168.4.1/api/rgbw/state";
-            RootDeviceStateGet dev = await controller.getStateAsync(httpUri);
-            Trace.WriteLine(dev.rgbw.effectID);
-            Assert.InRange(dev.rgbw.effectID, 0, 10);
-        }
-        [Fact]
-        public async void EffectId_SetCorrectly_ReturnTrue()
-        {
-            LightBoxClass controller = new LightBoxClass();
-            string httpUri = "http://192.168.4.1/api/rgbw/state";
-            int effectId = 5;
-            controller.setEffect(httpUri, 2);
-            //could use some await over here
             var myDevState = await controller.getStateAsync(httpUri);
+            var currentEffectId = myDevState.rgbw.effectID;
+            Random randomGenerator = new Random();
+            int desiredEffectId = currentEffectId;
+            while (desiredEffectId == currentEffectId)
+            {
+                desiredEffectId = randomGenerator.Next(10);
+            }
+            await controller.setEffect(httpUri, desiredEffectId);
+            myDevState = await controller.getStateAsync(httpUri);
 
-            Assert.Equal(myDevState.rgbw.effectID, effectId);
+            Assert.Equal(desiredEffectId, myDevState.rgbw.effectID);
         }
         [Fact]
-        public async void IsDimmedColorComponentInRange_ReturnTrue()
+        public async Task Color_SetCorrectly_ReturnTrue()
         {
-            LightBoxClass controller = new LightBoxClass();
+            var myDevState = await controller.getStateAsync(httpUri);
+            var fadeTime = myDevState.rgbw.durationsMs.colorFade;
+            string desiredColour = "#ffabcdef";
+            await controller.setColorAsync(httpUri, desiredColour);
+            Thread.Sleep(fadeTime);
+            desiredColour = desiredColour.Remove(0, 3).Insert(6, "ff");
+            myDevState = await controller.getStateAsync(httpUri);
+
+            Assert.Equal(desiredColour, myDevState.rgbw.currentColor);
+        }
+        [Fact]
+        public async Task FadeTime_SetCorrectly_ReturnTrue()
+        {
+            var myDevState = await controller.getStateAsync(httpUri);
+            var currentFadeTime = myDevState.rgbw.durationsMs.colorFade;
+            Random randomGenerator = new Random();
+            int desiredFadeTime = currentFadeTime;
+            while (desiredFadeTime == currentFadeTime)
+            {
+                desiredFadeTime = randomGenerator.Next(1000, 360000);
+            }
+            await controller.setColorFade(httpUri, desiredFadeTime);
+            myDevState = await controller.getStateAsync(httpUri);
+            if (desiredFadeTime == myDevState.rgbw.durationsMs.colorFade)
+            Assert.Equal(desiredFadeTime, myDevState.rgbw.durationsMs.colorFade);
+        }
+        [Fact]
+        public void IsDimmedColorComponentInRange_ReturnTrue()
+        {
             string color = "FFFFFF";
-            var hex = controller.applyDim(color, 0, 50);
+            var hex =  controller.applyDim(color, 0, 100);
             
             Assert.InRange(hex, "00", "FF");
         }

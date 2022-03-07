@@ -91,9 +91,8 @@ namespace LightBoxGUI
             }
             else
                 MessageBox.Show("This is not a valid ip address. Re-enter");
-
-            //find avaiable ip devices
         }
+
         private async void btnGetInfo_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -228,13 +227,14 @@ namespace LightBoxGUI
                 lblCurrentEffect.Content = "";
 
                 dTimer.Stop();
+
                 btnRead.IsChecked = false;
                 btnRead.IsEnabled = false;
                 clrPcker.IsEnabled = false;
                 cmbEffect.IsEnabled = false;
                 sldValueHsv.IsEnabled = false;
                 tbFadeTime.IsEnabled = false;
-                Thread.Sleep(myDevice.rgbw.durationsMs.colorFade);
+                Thread.Sleep(1000);//(myDevice.rgbw.durationsMs.colorFade);
                 rctColor.Fill = Brushes.Black;
             }
             catch (Exception ex)
@@ -257,12 +257,22 @@ namespace LightBoxGUI
                     if (Int32.TryParse(tbFadeTime.Text, out int fadeTime) && fadeTime >= 1000 && fadeTime <= 3600000)
                     {
                         await controller.setColorFade(httpUri, fadeTime);
+                        Keyboard.ClearFocus();
                     }
                     else
                     {
-                        MessageBox.Show("Enter integer time value in ms ranging from 1000 to 360000");
+                        MessageBox.Show("Enter integer time value in ms ranging from 1000 to 360000\nDouble-click to clear");
                     }
                 }       
+            }
+        }
+
+        private void tbIpAddress_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                btnSetIp_Click(sender, e);
+                Keyboard.ClearFocus();
             }
         }
     }

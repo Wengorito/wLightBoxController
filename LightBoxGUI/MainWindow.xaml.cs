@@ -74,20 +74,25 @@ namespace LightBoxGUI
             bool ValidateIP = IPAddress.TryParse(ipAddress, out ip);
             if (ValidateIP)
             {
-                PingReply reply = pingSender.Send(ip, 2000);
-                if (reply.Status == IPStatus.Success)
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
-                    httpUri = string.Concat("http://", ipAddress);
-                    Trace.WriteLine($"IP address set: {tbIpAddress.Text}");
-                    btnSetIp.Background = Brushes.Green;
-                    btnGetInfo.IsEnabled = true;
-                    tgbToggle.IsEnabled = true;
+                    PingReply reply = pingSender.Send(ip, 2000);
+                    if (reply.Status == IPStatus.Success)
+                    {
+                        httpUri = string.Concat("http://", ipAddress);
+                        Trace.WriteLine($"IP address set: {tbIpAddress.Text}");
+                        btnSetIp.Background = Brushes.Green;
+                        btnGetInfo.IsEnabled = true;
+                        tgbToggle.IsEnabled = true;
+                    }
+                    else
+                    {
+                        btnSetIp.Background = Brushes.Gray;
+                        MessageBox.Show("Selected IP device not available");
+                    }
                 }
                 else
-                {
-                    btnSetIp.Background = Brushes.Gray;
-                    MessageBox.Show("Selected IP device not available");
-                }
+                    MessageBox.Show("Enter valid IPv4 address");
             }
             else
                 MessageBox.Show("This is not a valid ip address. Re-enter");
@@ -193,10 +198,14 @@ namespace LightBoxGUI
         {
             try
             {
-                if(String.IsNullOrEmpty(clrLast))
-                    await controller.setColorUnchangedAsync(httpUri);
+                var myDevice = await controller.getStateAsync(httpUri);
+
+                if (String.IsNullOrEmpty(clrLast))
+                    //await controller.setColorUnchangedAsync(httpUri);
+                    await controller.setColorAsync(httpUri, myDevice.rgbw.lastOnColor.Remove(6, 2).Insert(0, "#FF"));//clrLast.Remove(6, 2).Insert(0, "#FF"));
+
                 else
-                    await controller.setColorAsync(httpUri, clrLast.Remove(6, 2).Insert(0, "#FF"), 100);
+                    await controller.setColorAsync(httpUri, clrLast.Remove(6, 2).Insert(0, "#FF"));
 
                 btnRead.IsEnabled = true;
                 btnRead.IsChecked = true;
@@ -226,16 +235,16 @@ namespace LightBoxGUI
                 await controller.setColorAsync(httpUri, clrLast.Remove(6, 2).Insert(0, "#FF"), 0);
                 lblCurrentEffect.Content = "";
 
-                dTimer.Stop();
+                //dTimer.Stop();
 
-                btnRead.IsChecked = false;
+                //btnRead.IsChecked = false;
                 btnRead.IsEnabled = false;
                 clrPcker.IsEnabled = false;
                 cmbEffect.IsEnabled = false;
                 sldValueHsv.IsEnabled = false;
                 tbFadeTime.IsEnabled = false;
-                Thread.Sleep(1000);//(myDevice.rgbw.durationsMs.colorFade);
-                rctColor.Fill = Brushes.Black;
+                //Thread.Sleep(1000);//(myDevice.rgbw.durationsMs.colorFade);
+                //rctColor.Fill = Brushes.Black;
             }
             catch (Exception ex)
             {

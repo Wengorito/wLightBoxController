@@ -63,7 +63,7 @@ namespace LightBoxController
             client.Dispose();
         }
             
-        public async Task<Device> getInfo(string httpUri) 
+        public async Task<Device> getInfo(string httpUri)
         {
             string requestUri = httpUri + "/info";
             RootDevice rootDevObj = new RootDevice();
@@ -192,7 +192,7 @@ namespace LightBoxController
             return hexComponent;
         }
         /// <summary>
-        /// Accepts color argument as #ARGB hex string, e.g. "#FFABCDEF"
+        /// Accepts color argument as #ARGB hex string, e.g. "#FFABCDEF". Dim as optional int in range 0 - 100, default 100
         /// </summary>
         /// <param name="httpUri"></param>
         /// <param name="colour"></param>
@@ -218,18 +218,18 @@ namespace LightBoxController
             HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
             await client.PostAsync(requestUri, httpContent);
         }
-        public async Task setColorUnchangedAsync(string httpUri)
-        {
-            string requestUri = httpUri + "/api/rgbw/set";
-            RootDeviceStateSet myDevState = new RootDeviceStateSet();
-            Rgbw myRgbw = new();
-            myRgbw.desiredColor = "--------";
-            myDevState.rgbw = myRgbw;
+        //public async Task setColorUnchangedAsync(string httpUri)
+        //{
+        //    string requestUri = httpUri + "/api/rgbw/set";
+        //    RootDeviceStateSet myDevState = new RootDeviceStateSet();
+        //    Rgbw myRgbw = new();
+        //    myRgbw.desiredColor = "--------";
+        //    myDevState.rgbw = myRgbw;
 
-            string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(myDevState);
-            HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
-            await client.PostAsync(requestUri, httpContent);
-        }
+        //    string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(myDevState);
+        //    HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
+        //    await client.PostAsync(requestUri, httpContent);
+        //}
 
         public async Task setEffect(string httpUri, int effectId)
         {

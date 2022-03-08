@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:LightBoxGUI"
+        ResizeMode="NoResize"
         mc:Ignorable="d"
         Title="MainWindow" Height="400" Width="280" WindowStartupLocation="CenterScreen">
     <Grid>

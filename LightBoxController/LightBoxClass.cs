@@ -55,19 +55,23 @@ namespace LightBoxController
 
     public class LightBoxClass
     {
-        private static readonly HttpClient client = new HttpClient();
+        private static HttpClient _httpClient = new HttpClient();
+        public LightBoxClass(string uri)//(HttpMessageHandler httpMessageHandler)
+        {
+            _httpClient.BaseAddress = new Uri(uri);
+            _httpClient.Timeout = new TimeSpan(0, 0, 5);
+        }
 
         //to be removed
         public void dispose()
         {
-            client.Dispose();
+            _httpClient.Dispose();
         }
             
-        public async Task<Device> getInfo(string httpUri)
+        public async Task<Device> getInfo()
         {
-            string requestUri = httpUri + "/info";
             RootDevice rootDevObj = new RootDevice();
-            HttpResponseMessage result = await client.GetAsync(requestUri);
+            HttpResponseMessage result = await _httpClient.GetAsync("/info");
             //try
             //{
             //    result = 
@@ -82,7 +86,7 @@ namespace LightBoxController
             {
                 try
                 {
-                    string responseBody = await client.GetStringAsync(requestUri);
+                    string responseBody = await _httpClient.GetStringAsync("/info");
                     rootDevObj = JsonSerializer.Deserialize<RootDevice>(responseBody);
 
                     foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevObj.device))
@@ -92,22 +96,10 @@ namespace LightBoxController
                         Trace.WriteLine($"{name} = {value}");
                     }
                 }
-                catch (HttpRequestException e)
+                catch (Exception ex)
                 {
-                    Trace.WriteLine("Host not responding");
-                    Trace.WriteLine("ArgumentNullException caught!!!");
-                    Trace.WriteLine("Source : " + e.Source);
-                    Trace.WriteLine("Message : " + e.Message);
-
+                    Trace.WriteLine("Host not responding\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
                     return new Device();
-                }
-                catch (InvalidOperationException)
-                {
-                    Trace.WriteLine("IP address incorrect");
-                }
-                catch (TaskCanceledException)
-                {
-                    Trace.WriteLine("Timeout reached");
                 }
                 return new Device
                 {
@@ -122,61 +114,31 @@ namespace LightBoxController
                 return new Device { };
             }
         }
-        public async Task<RootDeviceStateGet> getStateAsync(string httpUri)
+        public async Task<RootDeviceStateGet> getStateAsync()
         {
             RootDeviceStateGet rootStateObj = new();
-            string requestUri = httpUri + "/api/rgbw/state";
-            HttpResponseMessage result;
-            try
-            {
-                result = await client.GetAsync(requestUri);
-                Trace.WriteLine(result.StatusCode);
-            }
-            catch (HttpRequestException)
-            {
-                Trace.WriteLine("Host not responding");
-            }
+            //try
+            //{
+            //    Trace.WriteLine(result.StatusCode);
+            //}
+            //catch (HttpRequestException)
+            //{
+            //    Trace.WriteLine("Host not responding");
+            //}
+            HttpResponseMessage result = await _httpClient.GetAsync("/api/rgbw/state");
+            result.EnsureSuccessStatusCode();
             //throw?
+            //exceptions catching in dll or gui?
             try
             {
-                string responseBody = await client.GetStringAsync(requestUri);
+                string responseBody = await _httpClient.GetStringAsync("/api/rgbw/state");
                 rootStateObj = JsonSerializer.Deserialize<RootDeviceStateGet>(responseBody);
                 //output print
                 Trace.WriteLine(ObjectDumper.Dump(rootStateObj));
-
-                //foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootStateObj.rgbw))
-                //{
-                //    string name = descriptor.Name;
-                //    object value = descriptor.GetValue(rootStateObj.rgbw);
-                //    if (name == "durationsMs")
-                //    {
-                //        foreach (PropertyDescriptor descriptor1 in TypeDescriptor.GetProperties(rootStateObj.rgbw.durationsMs))
-                //        {
-                //            string name1 = descriptor1.Name;
-                //            object value1 = descriptor1.GetValue(rootStateObj.rgbw.durationsMs);
-                //            Trace.WriteLine($"{name1} = {value1}");
-                //        }
-                //    }
-                //    else Trace.WriteLine($"{name} = {value}");
-                //}
             }
-            catch (HttpRequestException e)
+            catch (Exception ex)
             {
-                Trace.WriteLine("HttpRequestException caught");
-                Trace.WriteLine("Source : " + e.Source);
-                Trace.WriteLine("Message : " + e.Message);
-            }
-            catch (InvalidOperationException e)
-            {
-                Trace.WriteLine("IP address incorrect");
-                Trace.WriteLine("Source : " + e.Source);
-                Trace.WriteLine("Message : " + e.Message);
-            }
-            catch (TaskCanceledException e)
-            {
-                Trace.WriteLine("Timeout reached");
-                Trace.WriteLine("Source : " + e.Source);
-                Trace.WriteLine("Message : " + e.Message);
+                Trace.WriteLine("Host not responding\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
             }
             return new RootDeviceStateGet
             {
@@ -198,9 +160,8 @@ namespace LightBoxController
         /// <param name="colour"></param>
         /// <param name="dim"></param>
         /// <returns></returns>
-        public async Task setColorAsync(string httpUri, string colour, int dim = 100)
+        public async Task setColorAsync(string colour, int dim = 100)
         {
-            string requestUri = httpUri + "/api/rgbw/set";
             //remove '#' and Alpha - TODO colorModes
             colour = colour.Remove(0, 3);
             colour = string.Concat(
@@ -216,7 +177,7 @@ namespace LightBoxController
 
             string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(myDevState);
             HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
-            await client.PostAsync(requestUri, httpContent);
+            await _httpClient.PostAsync("/api/rgbw/set", httpContent);
         }
         //public async Task setColorUnchangedAsync(string httpUri)
         //{
@@ -228,12 +189,11 @@ namespace LightBoxController
 
         //    string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(myDevState);
         //    HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
-        //    await client.PostAsync(requestUri, httpContent);
+        //    await _httpClient.PostAsync(requestUri, httpContent);
         //}
 
-        public async Task setEffect(string httpUri, int effectId)
+        public async Task setEffect(int effectId)
         {
-            string requestUri = httpUri + "/api/rgbw/set";
             RootDeviceStateSet myDevState = new RootDeviceStateSet();
             Rgbw myRgbw = new();
             DurationsMs myDuration = new();
@@ -242,11 +202,10 @@ namespace LightBoxController
             myDevState.rgbw = myRgbw;
             string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(myDevState);
             HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
-            await client.PostAsync(requestUri, httpContent);
+            await _httpClient.PostAsync("/api/rgbw/set", httpContent);
         }
-        public async Task setColorFade(string httpUri, int fadeTime)
+        public async Task setColorFade(int fadeTime)
         {
-            string requestUri = httpUri + "/api/rgbw/set";
             RootDeviceStateSet myDevState = new RootDeviceStateSet();
             Rgbw myRgbw = new();
             DurationsMs myDuration = new();
@@ -255,7 +214,7 @@ namespace LightBoxController
             myDevState.rgbw = myRgbw;
             string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(myDevState);
             HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
-            await client.PostAsync(requestUri, httpContent);
+            await _httpClient.PostAsync("/api/rgbw/set", httpContent);
         }
     }
 }

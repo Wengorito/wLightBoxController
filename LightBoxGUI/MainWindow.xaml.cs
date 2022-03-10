@@ -21,7 +21,7 @@ namespace LightBoxGUI
         private string ipAddress { get; set; }
         private string httpUri { get; set; }
 
-        private LightBoxClass controller = new LightBoxClass();
+        private LightBoxClass controller;
 
         DispatcherTimer dTimer = new DispatcherTimer();
 
@@ -43,7 +43,7 @@ namespace LightBoxGUI
         private string? clrLast;
         
         public MainWindow()
-        {
+        {            
             InitializeComponent();
             InitializeComboBox();
             dTimer.Interval = TimeSpan.FromMilliseconds(100);
@@ -84,6 +84,12 @@ namespace LightBoxGUI
                         btnSetIp.Background = Brushes.Green;
                         btnGetInfo.IsEnabled = true;
                         tgbToggle.IsEnabled = true;
+
+                        //controller.dispose();
+                        //TODO singleton
+                        //Timeout wywala
+                        controller = new LightBoxClass(httpUri);
+
                     }
                     else
                     {
@@ -102,7 +108,7 @@ namespace LightBoxGUI
         {
             try
             {
-                var myDevice = await controller.getInfo(httpUri);
+                var myDevice = await controller.getInfo();
                 lblDeviceNameInfo.Content = myDevice.deviceName;
                 lblProductInfo.Content = myDevice.product;
                 lblApiLevelInfo.Content = myDevice.apiLevel;
@@ -116,7 +122,7 @@ namespace LightBoxGUI
         {
             try
             {
-                var myDevice = await controller.getStateAsync(httpUri);
+                var myDevice = await controller.getStateAsync();
                 if (myDevice?.rgbw != null)
                 {
                     rctColor.Fill = (SolidColorBrush)new BrushConverter().ConvertFrom($"#{myDevice.rgbw.currentColor.Remove(6, 2)}");
@@ -132,7 +138,7 @@ namespace LightBoxGUI
         {
                 try
                 {
-                    await controller.setColorAsync(httpUri, clr.ToString(), (int)sldValueHsv.Value);
+                    await controller.setColorAsync(clr.ToString(), (int)sldValueHsv.Value);
                     lblCurrentEffect.Content = "";
                 }
                 catch (Exception ex)
@@ -151,14 +157,14 @@ namespace LightBoxGUI
                 dTimer.Stop();
                 rctColor.Fill = Brushes.Gray;
                 ComboBoxEffects cbe = (ComboBoxEffects)cmbEffect.SelectedItem;
-                await controller.setEffect(httpUri, cbe._Value);
+                await controller.setEffect(cbe._Value);
                 if (cbe._Value != 0)
                     btnRead.IsChecked = false;
                 else
                     btnRead.IsChecked = true;
                 try
                 {
-                    var myDevice = await controller.getStateAsync(httpUri);
+                    var myDevice = await controller.getStateAsync();
                     if (myDevice?.rgbw != null)
                     {
                     if (cbe._Value != 0)
@@ -198,14 +204,14 @@ namespace LightBoxGUI
         {
             try
             {
-                var myDevice = await controller.getStateAsync(httpUri);
+                var myDevice = await controller.getStateAsync();
 
                 if (String.IsNullOrEmpty(clrLast))
                     //await controller.setColorUnchangedAsync(httpUri);
-                    await controller.setColorAsync(httpUri, myDevice.rgbw.lastOnColor.Remove(6, 2).Insert(0, "#FF"));//clrLast.Remove(6, 2).Insert(0, "#FF"));
+                    await controller.setColorAsync(myDevice.rgbw.lastOnColor.Remove(6, 2).Insert(0, "#FF"));//clrLast.Remove(6, 2).Insert(0, "#FF"));
 
                 else
-                    await controller.setColorAsync(httpUri, clrLast.Remove(6, 2).Insert(0, "#FF"));
+                    await controller.setColorAsync(clrLast.Remove(6, 2).Insert(0, "#FF"));
 
                 btnRead.IsEnabled = true;
                 btnRead.IsChecked = true;
@@ -226,13 +232,13 @@ namespace LightBoxGUI
             //TODO turn off the device, not sending black colour somehow..
             try
             {
-                var myDevice = await controller.getStateAsync(httpUri);
+                var myDevice = await controller.getStateAsync();
                 if (myDevice?.rgbw != null)
                 {
                     clrLast = myDevice.rgbw.currentColor;
                 }
                 //desiredColor as "--------" won't affect too
-                await controller.setColorAsync(httpUri, clrLast.Remove(6, 2).Insert(0, "#FF"), 0);
+                await controller.setColorAsync(clrLast.Remove(6, 2).Insert(0, "#FF"), 0);
                 lblCurrentEffect.Content = "";
 
                 //dTimer.Stop();
@@ -265,7 +271,7 @@ namespace LightBoxGUI
 
                     if (Int32.TryParse(tbFadeTime.Text, out int fadeTime) && fadeTime >= 1000 && fadeTime <= 3600000)
                     {
-                        await controller.setColorFade(httpUri, fadeTime);
+                        await controller.setColorFade(fadeTime);
                         Keyboard.ClearFocus();
                     }
                     else

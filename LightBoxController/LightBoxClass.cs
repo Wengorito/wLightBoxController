@@ -55,38 +55,43 @@ namespace LightBoxController
 
     public class LightBoxClass
     {
-        private static HttpClient _httpClient = new HttpClient();
-        public LightBoxClass(string uri)//(HttpMessageHandler httpMessageHandler)
+        private readonly HttpClient _httpClient;
+        public LightBoxClass(HttpClient httpClient)//(HttpMessageHandler httpMessageHandler)
         {
-            _httpClient.BaseAddress = new Uri(uri);
-            _httpClient.Timeout = new TimeSpan(0, 0, 5);
+            _httpClient = httpClient;
+        }
+        //to be removed
+        public LightBoxClass()
+        {
         }
 
-        //to be removed
+        /*************************wrong implementation***************************/
+        //HttpInvoke cos tam dispose jest
         public void dispose()
         {
             _httpClient.Dispose();
         }
             
-        public async Task<Device> getInfo()
+        public async Task<Device> getInfo(string uri = "/info")
         {
             RootDevice rootDevObj = new RootDevice();
-            HttpResponseMessage result = await _httpClient.GetAsync("/info");
+            HttpResponseMessage response = await _httpClient.GetAsync(uri);
             //try
             //{
-            //    result = 
-            //    Trace.WriteLine(result.StatusCode);
+            //    response = 
+            //    Trace.WriteLine(response.StatusCode);
             //}
 
             //catch (HttpRequestException)
             //{
             //    Trace.WriteLine("Host not responding");
             //}
-            if (result.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
             {
                 try
                 {
-                    string responseBody = await _httpClient.GetStringAsync("/info");
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    //string responseBody = await _httpClient.GetStringAsync(uri);
                     rootDevObj = JsonSerializer.Deserialize<RootDevice>(responseBody);
 
                     foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevObj.device))
@@ -119,16 +124,17 @@ namespace LightBoxController
             RootDeviceStateGet rootStateObj = new();
             //try
             //{
-            //    Trace.WriteLine(result.StatusCode);
+            //    Trace.WriteLine(response.StatusCode);
             //}
             //catch (HttpRequestException)
             //{
             //    Trace.WriteLine("Host not responding");
             //}
-            HttpResponseMessage result = await _httpClient.GetAsync("/api/rgbw/state");
-            result.EnsureSuccessStatusCode();
+            HttpResponseMessage response = await _httpClient.GetAsync("/api/rgbw/state");
+            response.EnsureSuccessStatusCode();
             //throw?
-            //exceptions catching in dll or gui?
+            //exceptions catching
+            //in dll or gui?
             try
             {
                 string responseBody = await _httpClient.GetStringAsync("/api/rgbw/state");

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,9 +24,11 @@ namespace LightBoxGUI
 
         private LightBoxClass controller;
 
-        DispatcherTimer dTimer = new DispatcherTimer();
+        //private HttpClient httpClient = new();
 
-        Ping pingSender = new Ping();
+        private DispatcherTimer dTimer = new DispatcherTimer();
+
+        private Ping pingSender = new Ping();
 
         private class ComboBoxEffects
         {
@@ -88,8 +91,13 @@ namespace LightBoxGUI
                         //controller.dispose();
                         //TODO singleton
                         //Timeout wywala
-                        controller = new LightBoxClass(httpUri);
-
+                        //inject HttpClient here, to enable testing
+                        HttpClient httpClient = new()
+                        {
+                            BaseAddress = new Uri(httpUri),
+                            Timeout = new TimeSpan(0, 0, 3)
+                        };
+                        controller = new LightBoxClass(httpClient);
                     }
                     else
                     {

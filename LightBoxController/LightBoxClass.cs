@@ -72,75 +72,71 @@ namespace LightBoxController
             _httpClient.Dispose();
         }
             
-        public async Task<Device> getInfo(string uri = "/info")
+        public async Task<RootDevice> getInfoAsync(string uri = "/info")
         {
-            RootDevice rootDevObj = new RootDevice();
+            RootDevice rootDev = new ();
             HttpResponseMessage response = await _httpClient.GetAsync(uri);
-            //try
-            //{
-            //    response = 
-            //    Trace.WriteLine(response.StatusCode);
-            //}
 
-            //catch (HttpRequestException)
-            //{
-            //    Trace.WriteLine("Host not responding");
-            //}
             if (response.IsSuccessStatusCode)
             {
                 try
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
                     //string responseBody = await _httpClient.GetStringAsync(uri);
-                    rootDevObj = JsonSerializer.Deserialize<RootDevice>(responseBody);
+                    rootDev = JsonSerializer.Deserialize<RootDevice>(responseBody);
 
-                    foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevObj.device))
-                    {
-                        string name = descriptor.Name;
-                        object value = descriptor.GetValue(rootDevObj.device);
-                        Trace.WriteLine($"{name} = {value}");
-                    }
+                    //foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(rootDevInstance.device))
+                    //{
+                    //    string name = descriptor.Name;
+                    //    object value = descriptor.GetValue(rootDevInstance.device);
+                    //    Trace.WriteLine($"{name} = {value}");
+                    //}
+                    //foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(devInstance))
+                    //{
+                    //    descriptor.SetValue(devInstance, descriptor.GetValue(rootDevInstance.device));
+                    //}
                 }
                 catch (Exception ex)
                 {
                     Trace.WriteLine("Host not responding\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
-                    return new Device();
+                    //return new RootDevice();
                 }
-                return new Device
-                {
-                    deviceName = rootDevObj.device.deviceName,
-                    product = rootDevObj.device.product,
-                    apiLevel = rootDevObj.device.apiLevel
-                };
             }
             else
             {
                 Trace.WriteLine("Host not responding");
-                return new Device { };
+                //return new RootDevice { };
             }
+            return new RootDevice
+            {
+                device = rootDev.device
+            };
         }
         public async Task<RootDeviceStateGet> getStateAsync()
         {
-            RootDeviceStateGet rootStateObj = new();
-            //try
-            //{
-            //    Trace.WriteLine(response.StatusCode);
-            //}
-            //catch (HttpRequestException)
-            //{
-            //    Trace.WriteLine("Host not responding");
-            //}
-            HttpResponseMessage response = await _httpClient.GetAsync("/api/rgbw/state");
-            response.EnsureSuccessStatusCode();
+            RootDeviceStateGet rootStateGet = new();
+            HttpResponseMessage response;
+            try
+            { 
+                response = await _httpClient.GetAsync("/api/rgbw/state"); 
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("GET exception\nSource : " + ex.Source + "\nMessage : " + ex.Message);
+                return new RootDeviceStateGet { };
+            }
+            //response.EnsureSuccessStatusCode();
+            Trace.WriteLine("GET response: "+response);
+            Trace.WriteLine("\nGET response content: "+response.Content);
             //throw?
             //exceptions catching
             //in dll or gui?
             try
             {
-                string responseBody = await _httpClient.GetStringAsync("/api/rgbw/state");
-                rootStateObj = JsonSerializer.Deserialize<RootDeviceStateGet>(responseBody);
+                string responseBody = await response.Content.ReadAsStringAsync();
+                rootStateGet = JsonSerializer.Deserialize<RootDeviceStateGet>(responseBody);
                 //output print
-                Trace.WriteLine(ObjectDumper.Dump(rootStateObj));
+                Trace.WriteLine(ObjectDumper.Dump(rootStateGet));
             }
             catch (Exception ex)
             {
@@ -148,7 +144,7 @@ namespace LightBoxController
             }
             return new RootDeviceStateGet
             {
-                rgbw = rootStateObj.rgbw
+                rgbw = rootStateGet.rgbw
             };
         }
         public string applyDim(string col, int sub,  int dim)
@@ -175,16 +171,34 @@ namespace LightBoxController
                 applyDim(colour, 2, dim),
                 applyDim(colour, 4, dim),
                 "ff");
-
-            RootDeviceStateSet myDevState = new RootDeviceStateSet();
+            RootDeviceStateSet rootStateSet = new RootDeviceStateSet();
             Rgbw myRgbw = new();
             myRgbw.desiredColor = colour;
-            myDevState.rgbw = myRgbw;
+            rootStateSet.rgbw = myRgbw;
 
-            string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(myDevState);
+            string stateJson = JsonSerializer.Serialize<RootDeviceStateSet>(rootStateSet);
             HttpContent httpContent = new StringContent(stateJson, Encoding.UTF8, "application/json");
-            await _httpClient.PostAsync("/api/rgbw/set", httpContent);
+            //Alternatively, you can omit the Content-Length header for your POST request
+            //and use the Transfer-Encoding header instead.
+            //If the Content-Length and Transfer-Encoding headers are missing,
+            //the connection MUST be closed at the end of the response. 
+            HttpResponseMessage response = await _httpClient.PostAsync("/api/rgbw/set", httpContent);
+            Trace.WriteLine($"post response: {response}");
+            if (response.IsSuccessStatusCode)
+            {
+                Trace.WriteLine($"Set color response status code OK. Colour: {colour}");
+                //throw new Exception("Wyjątkowo nie udało się ustawić wyjątkowego koloru");
+            }
+            else
+            {
+
+                Trace.WriteLine($"Error: status code else than 200: {colour}");
+                throw new Exception("Wyjątkowo nie udało się ustawić wyjątkowego koloru");
+
+            }
+            //response.EnsureSuccessStatusCode();
         }
+        
         //public async Task setColorUnchangedAsync(string httpUri)
         //{
         //    string requestUri = httpUri + "/api/rgbw/set";

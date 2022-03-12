@@ -41,7 +41,7 @@ namespace LightBoxGUI
                 _Value = _value;
             }
         }
-        
+        //global variable for keeping the colour, allows the Dim slider 
         private System.Windows.Media.Color? clr;
         private string? clrLast;
         
@@ -116,10 +116,10 @@ namespace LightBoxGUI
         {
             try
             {
-                var myDevice = await controller.getInfo();
-                lblDeviceNameInfo.Content = myDevice.deviceName;
-                lblProductInfo.Content = myDevice.product;
-                lblApiLevelInfo.Content = myDevice.apiLevel;
+                var myRootDevice = await controller.getInfoAsync();
+                lblDeviceNameInfo.Content = myRootDevice.device.deviceName;
+                lblProductInfo.Content = myRootDevice.device.product;
+                lblApiLevelInfo.Content = myRootDevice.device.apiLevel;
             }
             catch (Exception)
             {
@@ -139,10 +139,10 @@ namespace LightBoxGUI
             catch (Exception ex)
             {
                 dTimer.Stop(); //so that the window won't pop up continously
-                MessageBox.Show("Error\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                MessageBox.Show("async Task getStateColor\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
             }
         }
-        private async void setState()
+        private async void setState()//some of the methods use this some directly call setColorAsync... brothel
         {
                 try
                 {
@@ -151,7 +151,7 @@ namespace LightBoxGUI
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Error\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                    MessageBox.Show("Gui setState() method\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
                 }
         }
         private void sldValueHsv_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -159,22 +159,22 @@ namespace LightBoxGUI
                 setState();
                 if (btnRead.IsChecked == false)
                     btnRead.IsChecked = true;
-        }       
+        }
         private async void cmbEffect_DropDownClosed(object sender, EventArgs e)
         {
-                dTimer.Stop();
-                rctColor.Fill = Brushes.Gray;
-                ComboBoxEffects cbe = (ComboBoxEffects)cmbEffect.SelectedItem;
-                await controller.setEffect(cbe._Value);
-                if (cbe._Value != 0)
-                    btnRead.IsChecked = false;
-                else
-                    btnRead.IsChecked = true;
-                try
+            dTimer.Stop();
+            rctColor.Fill = Brushes.Gray;
+            ComboBoxEffects cbe = (ComboBoxEffects)cmbEffect.SelectedItem;
+            await controller.setEffect(cbe._Value);
+            if (cbe._Value != 0)
+                btnRead.IsChecked = false;
+            else
+                btnRead.IsChecked = true;
+            try
+            {
+                var myDevice = await controller.getStateAsync();
+                if (myDevice?.rgbw != null)
                 {
-                    var myDevice = await controller.getStateAsync();
-                    if (myDevice?.rgbw != null)
-                    {
                     if (cbe._Value != 0)
                     {
                         lblCurrentEffect.Content = $"Wow effect no. {myDevice.rgbw.effectID}";
@@ -182,23 +182,24 @@ namespace LightBoxGUI
                     }
                     else
                         lblCurrentEffect.Content = "Boring!";
-                    }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
-                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("async void cmbEffect_DropDownClosed\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+            }
         }
         private void clrPcker_Closed(object sender, RoutedEventArgs e)
         {
-                if (clrPcker.SelectedColor.HasValue)
-                {
-                    clr = clrPcker.SelectedColor;
-                    //clr = clrPcker.SelectedColorText;
-                    setState();
-                    if (btnRead.IsChecked == false)
-                        btnRead.IsChecked = true;
-                }
+
+            if (clrPcker.SelectedColor.HasValue)
+            {
+                clr = clrPcker.SelectedColor;
+                //clr = clrPcker.SelectedColorText;
+                setState();
+                //if (btnRead.IsChecked == false)
+                    //btnRead.IsChecked = true;
+            }
         }
         private void btnRead_Check(object sender, EventArgs e)
         {
@@ -212,12 +213,16 @@ namespace LightBoxGUI
         {
             try
             {
+                //first run - check last color which has been set before shutting down
                 var myDevice = await controller.getStateAsync();
 
-                if (String.IsNullOrEmpty(clrLast))
+                if (String.IsNullOrEmpty(clrLast))                //both empty then what (tgl uncheck nulls clrLast)
+                {
+                    string stringColor = myDevice.rgbw.lastOnColor.Remove(6, 2).Insert(0, "#FF");
                     //await controller.setColorUnchangedAsync(httpUri);
-                    await controller.setColorAsync(myDevice.rgbw.lastOnColor.Remove(6, 2).Insert(0, "#FF"));//clrLast.Remove(6, 2).Insert(0, "#FF"));
-
+                    await controller.setColorAsync(stringColor);//clrLast.Remove(6, 2).Insert(0, "#FF"));
+                    clr = (Color)System.Windows.Media.ColorConverter.ConvertFromString(stringColor);
+                }
                 else
                     await controller.setColorAsync(clrLast.Remove(6, 2).Insert(0, "#FF"));
 
@@ -231,7 +236,7 @@ namespace LightBoxGUI
             catch (Exception ex)
             {
                 tgbToggle.IsChecked = false;
-                MessageBox.Show("Device unreachable\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                MessageBox.Show("tgbToggle_Checked: Device unreachable\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
             }
 
         }
@@ -241,12 +246,14 @@ namespace LightBoxGUI
             try
             {
                 var myDevice = await controller.getStateAsync();
-                if (myDevice?.rgbw != null)
+                if (myDevice?.rgbw?.currentColor != null)
                 {
                     clrLast = myDevice.rgbw.currentColor;
                 }
                 //desiredColor as "--------" won't affect too
-                await controller.setColorAsync(clrLast.Remove(6, 2).Insert(0, "#FF"), 0);
+                await controller.setColorAsync("#FF000000");//max dim -> black
+                //await controller.setColorAsync(clrLast.Remove(6, 2).Insert(0, "#FF"), 0);//max dim -> black
+                //await controller.setColorAsync(clr.ToString(), 0);//max dim -> black
                 lblCurrentEffect.Content = "";
 
                 //dTimer.Stop();
@@ -262,7 +269,7 @@ namespace LightBoxGUI
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                MessageBox.Show("tgbToggle_Unchecked\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
             }
         }
 

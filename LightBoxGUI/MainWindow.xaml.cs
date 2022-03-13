@@ -68,7 +68,7 @@ namespace LightBoxGUI
         }
         private void dTimer_Tick(object sender, EventArgs e)
         {
-            getStateColor(sender, e);
+            getColorState(sender, e);
         }
         private void btnSetIp_Click(object sender, RoutedEventArgs e)
         {
@@ -103,6 +103,8 @@ namespace LightBoxGUI
                     {
                         btnSetIp.Background = Brushes.Gray;
                         MessageBox.Show("Selected IP device not available");
+                        tgbToggle.IsEnabled = false;
+                        btnGetInfo.IsEnabled = false;
                     }
                 }
                 else
@@ -123,10 +125,10 @@ namespace LightBoxGUI
             }
             catch (Exception)
             {
-                MessageBox.Show("Host not responding. Set correct IP");
+                MessageBox.Show($"Selected host ({tbIpAddress.Text}) not responding.");
             }
         }
-        private async Task getStateColor(object sender, EventArgs e)
+        private async Task getColorState(object sender, EventArgs e)
         {
             try
             {
@@ -139,7 +141,7 @@ namespace LightBoxGUI
             catch (Exception ex)
             {
                 dTimer.Stop(); //so that the window won't pop up continously
-                MessageBox.Show("async Task getStateColor\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                MessageBox.Show("async Task getColorState\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
             }
         }
         private async void setState()//some of the methods use this some directly call setColorAsync... brothel
@@ -215,28 +217,35 @@ namespace LightBoxGUI
             {
                 //first run - check last color which has been set before shutting down
                 var myDevice = await controller.getStateAsync();
+                //if (myDevice.rgbw != null)
+                //{
+                    if (String.IsNullOrEmpty(clrLast))                //both empty then what (tgl uncheck nulls clrLast)
+                    {
+                        string stringColor = myDevice.rgbw.lastOnColor.Remove(6, 2).Insert(0, "#FF");
+                        //await controller.setColorUnchangedAsync(httpUri);
+                        await controller.setColorAsync(stringColor);//clrLast.Remove(6, 2).Insert(0, "#FF"));
+                        clr = (Color)System.Windows.Media.ColorConverter.ConvertFromString(stringColor);
+                    }
+                    else
+                        await controller.setColorAsync(clrLast.Remove(6, 2).Insert(0, "#FF"));
 
-                if (String.IsNullOrEmpty(clrLast))                //both empty then what (tgl uncheck nulls clrLast)
-                {
-                    string stringColor = myDevice.rgbw.lastOnColor.Remove(6, 2).Insert(0, "#FF");
-                    //await controller.setColorUnchangedAsync(httpUri);
-                    await controller.setColorAsync(stringColor);//clrLast.Remove(6, 2).Insert(0, "#FF"));
-                    clr = (Color)System.Windows.Media.ColorConverter.ConvertFromString(stringColor);
-                }
-                else
-                    await controller.setColorAsync(clrLast.Remove(6, 2).Insert(0, "#FF"));
-
-                btnRead.IsEnabled = true;
-                btnRead.IsChecked = true;
-                clrPcker.IsEnabled = true;
-                cmbEffect.IsEnabled = true;
-                sldValueHsv.IsEnabled = true;
-                tbFadeTime.IsEnabled = true;
+                    btnRead.IsEnabled = true;
+                    btnRead.IsChecked = true;
+                    clrPcker.IsEnabled = true;
+                    cmbEffect.IsEnabled = true;
+                    sldValueHsv.IsEnabled = true;
+                    tbFadeTime.IsEnabled = true;
+                //}
+                //else
+                //    tgbToggle.IsChecked = false;
             }
             catch (Exception ex)
             {
-                tgbToggle.IsChecked = false;
+                tgbToggle.IsEnabled = false;
+                btnGetInfo.IsEnabled = false;
+                btnSetIp.Background = Brushes.Gray;
                 MessageBox.Show("tgbToggle_Checked: Device unreachable\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                //failure procedure: proceed ping and if fails, disable all the controls
             }
 
         }
@@ -269,7 +278,9 @@ namespace LightBoxGUI
             }
             catch (Exception ex)
             {
-                MessageBox.Show("tgbToggle_Unchecked\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                //MessageBox.Show("tgbToggle_Unchecked\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                MessageBox.Show($"Host device ({tbIpAddress.Text}) not responding");                btnRead.IsEnabled = false;
+
             }
         }
 

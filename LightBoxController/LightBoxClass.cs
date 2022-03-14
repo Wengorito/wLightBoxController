@@ -91,18 +91,6 @@ namespace LightBoxController
             try
             {
                 response = await _httpClient.GetAsync("/api/rgbw/state");
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine("GET exception\nSource : " + ex.Source + "\nMessage : " + ex.Message);
-                return new RootDeviceStateGet { };
-            }
-            //response.EnsureSuccessStatusCode();
-            //throw?
-            //exceptions catching
-            //in dll or gui?
-            try
-            {
                 string responseBody = await response.Content.ReadAsStringAsync();
                 rootStateGet = JsonSerializer.Deserialize<RootDeviceStateGet>(responseBody);
                 //output print
@@ -110,7 +98,8 @@ namespace LightBoxController
             }
             catch (Exception ex)
             {
-                Trace.WriteLine("Host not responding\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                Trace.WriteLine("GET exception\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
+                return new RootDeviceStateGet { };
             }
             return new RootDeviceStateGet
             {
@@ -157,13 +146,12 @@ namespace LightBoxController
             if (response.IsSuccessStatusCode)
             {
                 Trace.WriteLine($"Set color response status code OK. Colour: {colour}");
-                //throw new Exception("Wyjątkowo nie udało się ustawić wyjątkowego koloru");
             }
             else
             {
 
                 Trace.WriteLine($"Error: status code else than 200: {colour}");
-                throw new Exception("Wyjątkowo nie udało się ustawić wyjątkowego koloru");
+                throw new Exception("setColorAsync has thrown an exception (!IsSuccessStatusCode)");
 
             }
             //response.EnsureSuccessStatusCode();

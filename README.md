@@ -18,23 +18,23 @@ The whole project has been created using the .NET 5 target framework and Windows
 NuGet packages reference:
 
 ### LightBoxController:
--ObjectDumper.NET v3.3.13
--System.Text.Json v6.0.2
+- ObjectDumper.NET v3.3.13
+- System.Text.Json v6.0.2
 
 ### LightBoxGUI
--Extended.Wpf.Toolkit v4.2.0
+- Extended.Wpf.Toolkit v4.2.0
 
 ### LightBoxController.Tests
--Moq v4.17.2
--xunit v2.4.1
--xunit.runner.visualstudio v2.4.3
--coverlet.collector v3.0.2
+- Moq v4.17.2
+- xunit v2.4.1
+- xunit.runner.visualstudio v2.4.3
+- coverlet.collector v3.0.2
 
 
 ## Setup
 To run this project clone it locally and open with Visual Studio (preferably 2019 or newer). LightBoxGUI should be set as the startup project. Compile and run. 
 For now, you shall use the device's internal access point (something like 192.168.4.1) 
-to which you have to connect your PC or use the local WiFi provided that it has been preconfigured in the hardware
+to which you have to connect your PC or use the local WiFi provided that it has been preconfigured in the hardware.
 
-##Author
+## Author
 Grzegorz Wengorz Inc.

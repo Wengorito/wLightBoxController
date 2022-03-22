@@ -1,23 +1,34 @@
 using System;
 using Xunit;
-using LightBoxController;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using System.Threading;
-using MockHttp;
 using Moq;
 using Moq.Protected;
 using System.Text.Json;
+using static LightBoxController.HttpObjects;
 
 namespace LightBoxController.Tests
 {
     public class LightBoxClassTest
     {
+        public class HttpMessageHandlerStub : HttpMessageHandler
+        {
+            private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _sendAsync;
+            public HttpMessageHandlerStub(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> sendAsync)
+            {
+                _sendAsync = sendAsync;
+            }
+            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                return await _sendAsync(request, cancellationToken);
+            }
+        }
+
         //https://gingter.org/2018/07/26/how-to-mock-httpclient-in-your-net-c-unit-tests/
         [Fact]
-        public async Task Mock_GetInfo_ShouldNotReturnNull()
+        public async Task Mock_GetInfoShouldNotReturnNull()
         {
             // ARRANGE
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
@@ -28,7 +39,7 @@ namespace LightBoxController.Tests
                     "SendAsync",
                     ItExpr.IsAny<HttpRequestMessage>(),
                     ItExpr.IsAny<CancellationToken>()
-                )             
+                )
                 // prepare the expected response of the mocked http call
                 .ReturnsAsync(new HttpResponseMessage()
                 {
@@ -39,18 +50,16 @@ namespace LightBoxController.Tests
                 })
                 .Verifiable();
             // use real http client with mocked handler here
-            HttpClient httpClient = new HttpClient(handlerMock.Object)
+            var httpClient = new HttpClient(handlerMock.Object)
             {
                 BaseAddress = new Uri("http://localhost.com/")
             };
-            LightBoxClass controllerUnderTest  = new LightBoxClass(httpClient);
+            LightBoxClass controllerUnderTest = new(httpClient);
 
             //ACT
-            var result = await controllerUnderTest.getInfoAsync("/api/test/whatever");
+            HttpObjects.RootDevice result = await controllerUnderTest.GetInfoAsync("/api/test/whatever");
 
             // ASSERT
-            //result.Should().NotBeNull(); // this is fluent assertions here...
-            //result.Id.Should().Be(1);
             Assert.NotNull(result);
 
             // also check the 'http' call was like we expected it
@@ -65,9 +74,8 @@ namespace LightBoxController.Tests
                ItExpr.IsAny<CancellationToken>()
             );
         }
-
         [Fact]
-        public async Task Mock_SetColorCorrectly_ShouldCallOnce()
+        public async Task Mock_SetColorCorrectlyShouldCallOnce()
         {
             // ARRANGE
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
@@ -89,15 +97,15 @@ namespace LightBoxController.Tests
                 })
                 .Verifiable();
             // use real http client with mocked handler here
-            HttpClient httpClient = new HttpClient(handlerMock.Object)
+            var httpClient = new HttpClient(handlerMock.Object)
             {
                 BaseAddress = new Uri("http://localhost.com/")
             };
             LightBoxClass controllerUnderTest = new LightBoxClass(httpClient);
 
             //ACT
-            string colourStr = "#AAEECCBB";//hex exceeded and what?
-            await controllerUnderTest.setColorAsync(colourStr);
+            string colourString = "#FFAAEECB";
+            await controllerUnderTest.SetColorAsync(colourString);
 
             //ASSERT
             //since does not return anything, just check whether has been called
@@ -107,15 +115,14 @@ namespace LightBoxController.Tests
                "SendAsync",
                Times.Exactly(1), // we expected a single external request
                ItExpr.Is<HttpRequestMessage>(req =>
-                  req.Method == HttpMethod.Post  // we expected a yourmamamamamamamma request
+                  req.Method == HttpMethod.Post  // we expected a post request
                   && req.RequestUri == expectedUri // to this uri
                ),
                ItExpr.IsAny<CancellationToken>()
             );
         }
-
         [Fact]
-        public async Task Mock_SetEffectCorrectly_ShouldCallOnce()
+        public async Task Mock_SetEffectCorrectlyShouldCallOnce()
         {
             // ARRANGE
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
@@ -137,7 +144,7 @@ namespace LightBoxController.Tests
                 })
                 .Verifiable();
             // use real http client with mocked handler here
-            HttpClient httpClient = new HttpClient(handlerMock.Object)
+            var httpClient = new HttpClient(handlerMock.Object)
             {
                 BaseAddress = new Uri("http://localhost.com/")
             };
@@ -145,7 +152,7 @@ namespace LightBoxController.Tests
 
             //ACT
             int effectInt = 10;
-            await controllerUnderTest.setEffect(effectInt);
+            await controllerUnderTest.SetEffect(effectInt);
 
             //ASSERT
             //since does not return anything, just check whether has been called
@@ -155,16 +162,14 @@ namespace LightBoxController.Tests
                "SendAsync",
                Times.Exactly(1), // we expected a single external request
                ItExpr.Is<HttpRequestMessage>(req =>
-                  req.Method == HttpMethod.Post  // we expected a yourmamamamamamamma request
+                  req.Method == HttpMethod.Post  // we expected a post request
                   && req.RequestUri == expectedUri // to this uri
                ),
                ItExpr.IsAny<CancellationToken>()
             );
         }
-        //Set incorrect id and then? unable to check, class shall keep an eye on it (but the user has preselected values only tho)
-
         [Fact]
-        public async Task Mock_SetFadeTimeCorrectly_ShouldCallOnce()
+        public async Task Mock_SetFadeTimeCorrectlyShouldCallOnce()
         {
             // ARRANGE
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
@@ -186,7 +191,7 @@ namespace LightBoxController.Tests
                 })
                 .Verifiable();
             // use real http client with mocked handler here
-            HttpClient httpClient = new HttpClient(handlerMock.Object)
+            var httpClient = new HttpClient(handlerMock.Object)
             {
                 BaseAddress = new Uri("http://localhost.com/")
             };
@@ -194,7 +199,7 @@ namespace LightBoxController.Tests
 
             //ACT
             int effectInt = 11; //same as above
-            await controllerUnderTest.setColorFade(effectInt);
+            await controllerUnderTest.SetColorFade(effectInt);
 
             //ASSERT
             //since does not return anything, just check whether has been called
@@ -213,25 +218,12 @@ namespace LightBoxController.Tests
 
         //different approach (more generic)
         //https://peterdaugaardrasmussen.com/2018/10/11/c-how-to-mock-the-httpclient-for-tests/
-        public class HttpMessageHandlerStub : HttpMessageHandler
-        {
-            private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _sendAsync;
-            public HttpMessageHandlerStub(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> sendAsync)
-            {
-                _sendAsync = sendAsync;
-            }
-            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                return await _sendAsync(request, cancellationToken);
-            }
-        }
         [Fact]
-        public async Task haendelStub_getInfo_ShouldReturnTheSame() //or just not null
+        public async Task HandlerStub_GetInfoShouldReturnTheSame()
         {
             // ARRANGE
             string expectedMessage = "{\"device\":{\"deviceName\":\"MyBleBoxdevicename\"," +
-                    "\"product\":\"wLightBox_v3\",\"type\":\"wLightBox\",\"apiLevel\":\"20200518\"," +
-                    "\"hv\":\"9.1d\",\"fv\":\"0.987\",\"id\":\"g650e32d2217\",\"ip\":\"192.168.1.11\"}}";
+                    "\"product\":\"wLightBox_v3\",\"apiLevel\":\"20200518\"}}";
             var httpClient = new HttpClient(new HttpMessageHandlerStub(async (request, cancellationToken) =>
             {
                 var responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
@@ -244,24 +236,22 @@ namespace LightBoxController.Tests
             {
                 BaseAddress = new Uri("http://localhost.com/")
             };
-            LightBoxClass controllerUnderTest = new LightBoxClass(httpClient);
+            var controllerUnderTest = new LightBoxClass(httpClient);
 
             //ACT
-            var result = await controllerUnderTest.getInfoAsync();
+            RootDevice result = await controllerUnderTest.GetInfoAsync();
 
             // ASSERT
-            //somehow ambiguous - deserialize and revert? check if serializer works correctly
-            string resultString = JsonSerializer.Serialize<RootDevice>(result);
+            string resultString = JsonSerializer.Serialize(result);
             Assert.Equal(expectedMessage, resultString);
         }
-
         [Fact]
-        public async Task haendelStub_getState_IfResultNotAfflicted_ReturnTrue()
+        public async Task HandlerStub_GetStateIfResultNotAfflictedReturnTrue()
         {
             // ARRANGE
-            string expectedMessage = "{\"rgbw\":{\"colorMode\":1,\"effectID\":2,\"desiredColor\":\"ff00300000\"," +
+            string expectedMessage = "{\"rgbw\":{\"effectID\":2,\"desiredColor\":\"ff00300000\"," +
                 "\"currentColor\":\"ff00300000\",\"lastOnColor\":\"ff00300000\"," +
-                "\"durationsMs\":{\"colorFade\":1000,\"effectFade\":1500,\"effectStep\":2000}}}";
+                "\"durationsMs\":{\"colorFade\":1000}}}";
             var httpClient = new HttpClient(new HttpMessageHandlerStub(async (request, cancellationToken) =>
             {
                 var responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
@@ -274,24 +264,14 @@ namespace LightBoxController.Tests
             {
                 BaseAddress = new Uri("http://localhost.com/")
             };
-            LightBoxClass controllerUnderTest = new LightBoxClass(httpClient);
+            var controllerUnderTest = new LightBoxClass(httpClient);
 
             //ACT
-            var result = await controllerUnderTest.getStateAsync();
+            RootDeviceStateGet result = await controllerUnderTest.GetStateAsync();
 
             // ASSERT
-            //somehow ambiguous - utilises serializer assuming it works correctly
-            string resultString = JsonSerializer.Serialize<RootDeviceStateGet>(result);
+            string resultString = JsonSerializer.Serialize(result);
             Assert.Equal(expectedMessage, resultString);
         }
-
-        //[Fact]
-        //public void IsDimmedColorComponentInRange_ReturnTrue()
-        //{
-        //    string color = "FFFFFF";
-        //    var hex = controller.applyDim(color, 0, 100);
-
-        //    Assert.InRange(hex, "00", "FF");
-        //}
     }
 }

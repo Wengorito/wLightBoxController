@@ -19,93 +19,111 @@ namespace LightBoxGUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string ipAddress { get; set; }
-        private string httpUri { get; set; }
-
         private LightBoxClass controller;
 
-        //private HttpClient httpClient = new();
+        private readonly DispatcherTimer dTimer = new();
 
-        private DispatcherTimer dTimer = new DispatcherTimer();
-
-        private Ping pingSender = new Ping();
+        private readonly Ping pingSender = new();
 
         private class ComboBoxEffects
         {
-            public string _Key { get; set; }
-            public int _Value { get; set; }
+            public string Key { get; set; }
+            public int Value { get; set; }
 
             public ComboBoxEffects(string _key, int _value)
             {
-                _Key = _key;
-                _Value = _value;
+                Key = _key;
+                Value = _value;
             }
         }
-        //global variable for keeping the colour, allows the Dim slider 
-        private System.Windows.Media.Color? clr;
-        private string? clrLast;
-        
+
+        //global variable for keeping the colour, necessary for the Dim slider 
+        private System.Windows.Media.Color? colour;
+        private string colourLast;
+
         public MainWindow()
-        {            
+        {
             InitializeComponent();
             InitializeComboBox();
             dTimer.Interval = TimeSpan.FromMilliseconds(100);
-            dTimer.Tick += dTimer_Tick;
+            dTimer.Tick += DTimer_Tick;
         }
         private void InitializeComboBox()
         {
-            List<ComboBoxEffects> cbEffList = new List<ComboBoxEffects>();
-            cbEffList.Add(new ComboBoxEffects("No effect", 0));
-            cbEffList.Add(new ComboBoxEffects("Chill", 1));
-            cbEffList.Add(new ComboBoxEffects("Disco", 2));
-            cbEffList.Add(new ComboBoxEffects("Techno", 3));
-            cbEffList.Add(new ComboBoxEffects("Effect Axe", 4));
-
-            cmbEffect.DisplayMemberPath = "_Key";
-            cmbEffect.SelectedValuePath = "_Value";
-            cmbEffect.ItemsSource = cbEffList;
-            cmbEffect.SelectedIndex = 0;
-        }
-        private void dTimer_Tick(object sender, EventArgs e)
-        {
-            getColorState(sender, e);
-        }
-        private void btnSetIp_Click(object sender, RoutedEventArgs e)
-        {
-            ipAddress = tbIpAddress.Text;
-            IPAddress ip;
-            bool ValidateIP = IPAddress.TryParse(ipAddress, out ip);
-            if (ValidateIP)
+            List<ComboBoxEffects> comboEffList = new()
             {
+                new ComboBoxEffects("No effect", 0),
+                new ComboBoxEffects("Chill", 1),
+                new ComboBoxEffects("Disco", 2),
+                new ComboBoxEffects("Techno", 3),
+                new ComboBoxEffects("Effect Axe", 4)
+            };
+
+            comboboxEffect.DisplayMemberPath = "_Key";
+            comboboxEffect.SelectedValuePath = "_Value";
+            comboboxEffect.ItemsSource = comboEffList;
+            comboboxEffect.SelectedIndex = 0;
+        }
+        private void DTimer_Tick(object sender, EventArgs e)
+        {
+            GetColorState(sender, e);
+        }
+        /// <summary>
+        /// A method to determine if an IP address is internal, as specified in RFC1918
+        /// </summary>
+        /// <param name="toTest">The IP address that will be tested</param>
+        /// <returns>Returns true if the IP is internal, false if it is external</returns>
+        private static bool IsInternal(IPAddress toTest)
+        {
+            if (IPAddress.IsLoopback(toTest)) return false;
+            else if (toTest.ToString() == "::1") return false;
+
+            byte[] bytes = toTest.GetAddressBytes();
+            return bytes[0] switch
+            {
+                10 => true,
+                172 => bytes[1] is < 32 and >= 16,
+                192 => bytes[1] == 168,
+                _ => false,
+            };
+        }
+        private void ButtonSetIp_Click(object sender, RoutedEventArgs e)
+        {
+            string ipAddress = tbIpAddress.Text;
+            //ValidateIP
+            if (IPAddress.TryParse(ipAddress, out IPAddress ip))
+            {
+                //reject IPv6
                 if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
-                    PingReply reply = pingSender.Send(ip, 2000);
-                    if (reply.Status == IPStatus.Success)
+                    if (IsInternal(ip))
                     {
-                        httpUri = string.Concat("http://", ipAddress);
-                        Trace.WriteLine($"IP address set: {tbIpAddress.Text}");
-                        btnSetIp.Background = Brushes.Green;
-                        btnGetInfo.IsEnabled = true;
-                        tgbToggle.IsEnabled = true;
-
-                        //controller.dispose();
-                        //TODO singleton
-                        //Timeout wywala
-                        //inject HttpClient here, to enable testing
-                        HttpClient httpClient = new()
+                        PingReply reply = pingSender.Send(ip, 2000);
+                        if (reply.Status == IPStatus.Success)
                         {
-                            BaseAddress = new Uri(httpUri),
-                            Timeout = new TimeSpan(0, 0, 1)
-                        };
-                        controller = new LightBoxClass(httpClient);
+                            buttonSetIp.Background = Brushes.Green;
+                            buttonGetInfo.IsEnabled = true;
+                            tgbToggle.IsEnabled = true;
+
+                            //controller.dispose();
+                            //TODO singleton
+                            HttpClient httpClient = new()
+                            {
+                                BaseAddress = new Uri(string.Concat("http://", ipAddress)),
+                                Timeout = new TimeSpan(0, 0, 1)
+                            };
+                            controller = new LightBoxClass(httpClient);
+                        }
+                        else
+                        {
+                            buttonSetIp.Background = Brushes.Gray;
+                            tgbToggle.IsEnabled = false;
+                            buttonGetInfo.IsEnabled = false;
+                            MessageBox.Show("Selected IP device not available");
+                        }
                     }
                     else
-                    {
-                        btnSetIp.Background = Brushes.Gray;
-                        MessageBox.Show("Selected IP device not available");
-                        tgbToggle.IsEnabled = false;
-                        btnGetInfo.IsEnabled = false;
-                    }
+                        MessageBox.Show("IP address not internal");
                 }
                 else
                     MessageBox.Show("Enter valid IPv4 address");
@@ -114,28 +132,28 @@ namespace LightBoxGUI
                 MessageBox.Show("This is not a valid ip address. Re-enter");
         }
 
-        private async void btnGetInfo_Click(object sender, RoutedEventArgs e)
+        private async void ButtonGetInfo_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                var myRootDevice = await controller.getInfoAsync();
-                lblDeviceNameInfo.Content = myRootDevice.device.deviceName;
-                lblProductInfo.Content = myRootDevice.device.product;
-                lblApiLevelInfo.Content = myRootDevice.device.apiLevel;
+                var myRootDevice = await controller.GetInfoAsync();
+                labelDeviceNameInfo.Content = myRootDevice.device.deviceName;
+                labelProductInfo.Content = myRootDevice.device.product;
+                labelApiLevelInfo.Content = myRootDevice.device.apiLevel;
             }
             catch (Exception)
             {
                 MessageBox.Show($"Selected host ({tbIpAddress.Text}) not responding.");
             }
         }
-        private async Task getColorState(object sender, EventArgs e)
+        private async Task GetColorState(object sender, EventArgs e)
         {
             try
             {
-                var myDevice = await controller.getStateAsync();
+                var myDevice = await controller.GetStateAsync();
                 if (myDevice?.rgbw != null)
                 {
-                    rctColor.Fill = (SolidColorBrush)new BrushConverter().ConvertFrom($"#{myDevice.rgbw.currentColor.Remove(6, 2)}");
+                    rectangleColor.Fill = (SolidColorBrush)new BrushConverter().ConvertFrom($"#{myDevice.rgbw.currentColor.Remove(6, 2)}");
                 }
             }
             catch (Exception ex)
@@ -144,47 +162,47 @@ namespace LightBoxGUI
                 MessageBox.Show("async Task getColorState\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
             }
         }
-        private async void setState()//some of the methods use this some directly call setColorAsync... brothel
+        private async void SetState()
         {
             try
             {
-                await controller.setColorAsync(clr.ToString(), (int)sldValueHsv.Value);
-                lblCurrentEffect.Content = "";
+                await controller.SetColorAsync(colour.ToString(), (int)sliderDim.Value);
+                labelCurrentEffect.Content = "";
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Device Disco nnected\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
-                rctColor.Fill = Brushes.Gray;
+                rectangleColor.Fill = Brushes.Gray;
             }
         }
-        private void sldValueHsv_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void SliderDim_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-                setState();
-                if (btnRead.IsChecked == false)
-                    btnRead.IsChecked = true;
+            SetState();
+            if (buttonRead.IsChecked == false)
+                buttonRead.IsChecked = true;
         }
-        private async void cmbEffect_DropDownClosed(object sender, EventArgs e)
+        private async void ComboboxEffect_DropDownClosed(object sender, EventArgs e)
         {
             try
             {
-                rctColor.Fill = Brushes.Gray;
-                ComboBoxEffects cbe = (ComboBoxEffects)cmbEffect.SelectedItem;
-                await controller.setEffect(cbe._Value);
-                if (cbe._Value != 0)
-                    btnRead.IsChecked = false;
+                rectangleColor.Fill = Brushes.Gray;
+                ComboBoxEffects selectedEffect = (ComboBoxEffects)comboboxEffect.SelectedItem;
+                await controller.SetEffect(selectedEffect.Value);
+                if (selectedEffect.Value != 0)
+                    buttonRead.IsChecked = false;
                 else
-                    btnRead.IsChecked = true;
+                    buttonRead.IsChecked = true;
 
-                var myDevice = await controller.getStateAsync();
+                var myDevice = await controller.GetStateAsync();
                 if (myDevice?.rgbw != null)
                 {
-                    if (cbe._Value != 0)
+                    if (selectedEffect.Value != 0)
                     {
-                        lblCurrentEffect.Content = $"Wow effect no. {myDevice.rgbw.effectID}";
-                        rctColor.Fill = Brushes.Gray;
+                        labelCurrentEffect.Content = $"Wow effect no. {myDevice.rgbw.effectID}";
+                        rectangleColor.Fill = Brushes.Gray;
                     }
                     else
-                        lblCurrentEffect.Content = "Boring!";
+                        labelCurrentEffect.Content = "Boring!";
                 }
             }
             catch (Exception)
@@ -192,115 +210,96 @@ namespace LightBoxGUI
                 MessageBox.Show($"Host device ({tbIpAddress.Text}) not responding. Check the connection.");
             }
         }
-        private void clrPcker_Closed(object sender, RoutedEventArgs e)
+        private void ColorPicker_Closed(object sender, RoutedEventArgs e)
         {
 
-            if (clrPcker.SelectedColor.HasValue)
+            if (colorPicker.SelectedColor.HasValue)
             {
-                clr = clrPcker.SelectedColor;
-                //clr = clrPcker.SelectedColorText;
-                setState();
-                //if (btnRead.IsChecked == false)
-                    //btnRead.IsChecked = true;
+                colour = colorPicker.SelectedColor;
+                SetState();
+                if (buttonRead.IsChecked == false)
+                    buttonRead.IsChecked = true;
             }
         }
-        private void btnRead_Check(object sender, EventArgs e)
+        private void ButtonRead_Check(object sender, EventArgs e)
         {
             dTimer.Start();
         }
-        private void btnRead_Uncheck(object sender, EventArgs e)
+        private void ButtonRead_Uncheck(object sender, EventArgs e)
         {
             dTimer.Stop();
         }
-        private async void tgbToggle_Checked(object sender, RoutedEventArgs e)
+        private async void TgbToggle_Checked(object sender, RoutedEventArgs e)
         {
-            //try
-            //{
-                //first run - check last color which has been set before shutting down
-                var myDevice = await controller.getStateAsync();
-                if (myDevice.rgbw != null)
+            //initial run - check last color which has been set before shutting down
+            var myDevice = await controller.GetStateAsync();
+            if (myDevice.rgbw != null)
+            {
+                if (string.IsNullOrEmpty(colourLast))
                 {
-                    if (String.IsNullOrEmpty(clrLast))                //both empty then what (tgl uncheck nulls clrLast)
-                    {
-                        string stringColor = myDevice.rgbw.lastOnColor.Remove(6, 2).Insert(0, "#FF");
-                        //await controller.setColorUnchangedAsync(httpUri);
-                        await controller.setColorAsync(stringColor);//clrLast.Remove(6, 2).Insert(0, "#FF"));
-                        clr = (Color)System.Windows.Media.ColorConverter.ConvertFromString(stringColor);
-                    }
-                    else
-                        await controller.setColorAsync(clrLast.Remove(6, 2).Insert(0, "#FF"));
-
-                    btnRead.IsEnabled = true;
-                    btnRead.IsChecked = true;
-                    clrPcker.IsEnabled = true;
-                    cmbEffect.IsEnabled = true;
-                    sldValueHsv.IsEnabled = true;
-                    tbFadeTime.IsEnabled = true;
+                    string stringColor = myDevice.rgbw.lastOnColor.Remove(6, 2).Insert(0, "#FF");
+                    await controller.SetColorAsync(stringColor);
+                    colour = (Color)ColorConverter.ConvertFromString(stringColor);
                 }
                 else
-                    tgbToggle.IsChecked = false;
-            //}
-            //catch (Exception)
-            //{
-            //    btnSetIp.Background = Brushes.Gray;
-            //    MessageBox.Show($"Host device ({tbIpAddress.Text}) not responding. Check the connection.");
-            //    //failure procedure: proceed ping and if fails, disable all the controls
-            //}
+                    await controller.SetColorAsync(colourLast.Remove(6, 2).Insert(0, "#FF"));
 
+                buttonRead.IsEnabled = true;
+                buttonRead.IsChecked = true;
+                colorPicker.IsEnabled = true;
+                comboboxEffect.IsEnabled = true;
+                sliderDim.IsEnabled = true;
+                textboxFadeTime.IsEnabled = true;
+            }
+            else
+                tgbToggle.IsChecked = false;
         }
-        private async void tgbToggle_Unchecked(object sender, RoutedEventArgs e)
+        private async void TgbToggle_Unchecked(object sender, RoutedEventArgs e)
         {
             //TODO turn off the device, not sending black colour somehow..
             try
             {
-                var myDevice = await controller.getStateAsync();
+                var myDevice = await controller.GetStateAsync();
                 if (myDevice?.rgbw?.currentColor != null)
                 {
-                    clrLast = myDevice.rgbw.currentColor;
+                    colourLast = myDevice.rgbw.currentColor;
                 }
-                //desiredColor as "--------" won't affect too
-                await controller.setColorAsync("#FF000000");//max dim -> black
-                //await controller.setColorAsync(clrLast.Remove(6, 2).Insert(0, "#FF"), 0);//max dim -> black
-                //await controller.setColorAsync(clr.ToString(), 0);//max dim -> black
-                lblCurrentEffect.Content = "";
+                await controller.SetColorAsync("#FF000000");//max dim -> black
 
-                //btnRead.IsChecked = false;
-                btnRead.IsEnabled = false;
-                clrPcker.IsEnabled = false;
-                cmbEffect.IsEnabled = false;
-                sldValueHsv.IsEnabled = false;
-                tbFadeTime.IsEnabled = false;
+                labelCurrentEffect.Content = "";
+                buttonRead.IsEnabled = false;
+                colorPicker.IsEnabled = false;
+                comboboxEffect.IsEnabled = false;
+                sliderDim.IsEnabled = false;
+                textboxFadeTime.IsEnabled = false;
             }
             catch (Exception)
             {
-                //tgbToggle.IsChecked = null;
-                //MessageBox.Show("tgbToggle_Unchecked\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
                 MessageBox.Show($"Host device ({tbIpAddress.Text}) not responding. Check the connection.");
-                rctColor.Fill = Brushes.Gray;
+                rectangleColor.Fill = Brushes.Gray;
             }
         }
-
-        private void tbFadeTime_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void TextboxFadeTime_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            tbFadeTime.Clear();
+            textboxFadeTime.Clear();
         }
-        private async void tbFadeTime_KeyDown(object sender, KeyEventArgs e)
+        private async void TextboxFadeTime_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Return)
             {
-                if (!String.IsNullOrEmpty(tbFadeTime.Text))
+                if (!string.IsNullOrEmpty(textboxFadeTime.Text))
                 {
-                    if (Int32.TryParse(tbFadeTime.Text, out int fadeTime) && fadeTime >= 1000 && fadeTime <= 3600000)
+                    if (int.TryParse(textboxFadeTime.Text, out int fadeTime) && fadeTime >= 1000 && fadeTime <= 3600000)
                     {
                         try
                         {
-                            await controller.setColorFade(fadeTime);
+                            await controller.SetColorFade(fadeTime);
                             Keyboard.ClearFocus();
                         }
                         catch (Exception)
                         {
                             MessageBox.Show($"Host device ({tbIpAddress.Text}) not responding. Check the connection.");
-                            rctColor.Fill = Brushes.Gray;
+                            rectangleColor.Fill = Brushes.Gray;
                         }
                     }
                     else
@@ -310,12 +309,11 @@ namespace LightBoxGUI
                 }
             }
         }
-
-        private void tbIpAddress_KeyDown(object sender, KeyEventArgs e)
+        private void TbIpAddress_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Return)
             {
-                btnSetIp_Click(sender, e);
+                ButtonSetIp_Click(sender, e);
                 Keyboard.ClearFocus();
             }
         }

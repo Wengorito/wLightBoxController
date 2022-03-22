@@ -34,32 +34,32 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Row="0" Grid.Column="0">
-                    <Button x:Name="btnSetIp" Content="Set IP" HorizontalAlignment="Center" Margin="0,5,0,0" Width="80" Click="btnSetIp_Click"/>
+                    <Button x:Name="buttonSetIp" Content="Set IP" HorizontalAlignment="Center" Margin="0,5,0,0" Width="80" Click="ButtonSetIp_Click"/>
                 </StackPanel>
                 <StackPanel Grid.Row="1" Grid.Column="0">
-                    <Button x:Name="btnGetInfo" Content="Get info" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top" Width="80" Click="btnGetInfo_Click" IsEnabled="False"/>
+                    <Button x:Name="buttonGetInfo" Content="Get info" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top" Width="80" Click="ButtonGetInfo_Click" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="0">
-                    <Label x:Name="lblDeviceName" Content="Device name:" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top" BorderThickness="1" BorderBrush="Aquamarine"/>
+                    <Label x:Name="labelDeviceName" Content="Device name:" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top" BorderThickness="1" BorderBrush="Aquamarine"/>
                 </StackPanel>
                 <StackPanel Grid.Row="3" Grid.Column="0">
-                    <Label x:Name="lblProduct" Content="Product:" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="labelProduct" Content="Product:" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
                 </StackPanel>
                 <StackPanel Grid.Row="4" Grid.Column="0">
-                    <Label x:Name="lblApiLevel" Content="API Level:" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="labelApiLevel" Content="API Level:" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="0" Grid.Column="1">
-                    <TextBox x:Name="tbIpAddress" HorizontalAlignment="Center" Margin="0,7,0,0" Text="192.168.4.1" TextWrapping="Wrap"  Width="80" TextAlignment="Center" KeyDown="tbIpAddress_KeyDown"/>
+                    <TextBox x:Name="tbIpAddress" HorizontalAlignment="Center" Margin="0,7,0,0" Text="192.168.4.1" TextWrapping="Wrap"  Width="80" TextAlignment="Center" KeyDown="TbIpAddress_KeyDown"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="1">
-                    <Label x:Name="lblDeviceNameInfo" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="labelDeviceNameInfo" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top"/>
                 </StackPanel>
                 <StackPanel Grid.Row="3" Grid.Column="1">
-                    <Label x:Name="lblProductInfo"  HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="labelProductInfo"  HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
                 </StackPanel>
                 <StackPanel Grid.Row="4" Grid.Column="1">
-                    <Label x:Name="lblApiLevelInfo"  HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="labelApiLevelInfo"  HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
                 </StackPanel>
             </Grid>
         </GroupBox>
@@ -81,45 +81,45 @@
 
                 <StackPanel Grid.Row="0" Grid.Column="0">
                     <ToggleButton x:Name="tgbToggle" Content="Toggle" Margin="0,3,0,0" HorizontalAlignment="Center" Width="80"
-                                  Checked="tgbToggle_Checked" Unchecked="tgbToggle_Unchecked" IsEnabled="False"/>
+                                  Checked="TgbToggle_Checked" Unchecked="TgbToggle_Unchecked" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Grid.Row="1" Grid.Column="0">
-                    <ToggleButton x:Name="btnRead" Content="Reading" Margin="0,5,0,0" HorizontalAlignment="Center" Width="80"
-                                  Checked="btnRead_Check" Unchecked="btnRead_Uncheck" IsEnabled="False"/>
+                    <ToggleButton x:Name="buttonRead" Content="Reading" Margin="0,5,0,0" HorizontalAlignment="Center" Width="80"
+                                  Checked="ButtonRead_Check" Unchecked="ButtonRead_Uncheck" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="0">
-                    <Rectangle x:Name="rctColor" HorizontalAlignment="Center" Height="50" Margin="0,5,0,0" Grid.Row="1" Fill="Black" Stroke="Black" VerticalAlignment="Top" Width="50" />
+                    <Rectangle x:Name="rectangleColor" HorizontalAlignment="Center" Height="50" Margin="0,5,0,0" Grid.Row="1" Fill="Black" Stroke="Black" VerticalAlignment="Top" Width="50" />
                 </StackPanel>
                 <StackPanel Grid.Row="3" Grid.Column="0">
-                    <Label x:Name="lblCurrentEffect" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top"/>
+                    <Label x:Name="labelCurrentEffect" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top"/>
                 </StackPanel>
 
 
 
                 <StackPanel Grid.Row="0" Grid.Column="1">
-                    <xctk:ColorPicker Name="clrPcker" DisplayColorAndName="False" ColorMode="ColorCanvas" Margin="0,3,0,0" 
+                    <xctk:ColorPicker Name="colorPicker" DisplayColorAndName="False" ColorMode="ColorCanvas" Margin="0,3,0,0" 
                                       ShowAvailableColors="False" ShowDropDownButton="True" IsEnabled="False"
-                                      AvailableColorsSortingMode="HueSaturationBrightness" Closed="clrPcker_Closed" Width="80" UsingAlphaChannel="False" >
+                                      AvailableColorsSortingMode="HueSaturationBrightness" Closed="ColorPicker_Closed" Width="80" UsingAlphaChannel="False" >
                         <xctk:ColorPicker.Background>
                             <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
                         </xctk:ColorPicker.Background>
                     </xctk:ColorPicker>
                 </StackPanel>
                 <StackPanel Grid.Row="1" Grid.Column="1">
-                    <TextBox x:Name="tbFadeTime" HorizontalAlignment="Center" Margin="0,5,0,0" Text="Fade time" TextWrapping="Wrap"  Width="80" 
-                             TextAlignment="Center" PreviewMouseDoubleClick="tbFadeTime_PreviewMouseDoubleClick"
-                             KeyDown="tbFadeTime_KeyDown" IsEnabled="False" ToolTip="1000:360000[ms], double-click to reset" />
+                    <TextBox x:Name="textboxFadeTime" HorizontalAlignment="Center" Margin="0,5,0,0" Text="Fade time" TextWrapping="Wrap"  Width="80" 
+                             TextAlignment="Center" PreviewMouseDoubleClick="TextboxFadeTime_PreviewMouseDoubleClick"
+                             KeyDown="TextboxFadeTime_KeyDown" IsEnabled="False" ToolTip="1000:360000[ms], double-click to reset" />
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="1">
                     <Label Content="Dimming" HorizontalAlignment="Center" Margin="0,5,0,0" Grid.Row="1" VerticalAlignment="Top" />
-                    <Slider x:Name="sldValueHsv" Width="80" Minimum="0" Maximum="100" Value="100" IsEnabled="False"
+                    <Slider x:Name="sliderDim" Width="80" Minimum="0" Maximum="100" Value="100" IsEnabled="False"
                             SmallChange="1" LargeChange="10" IsMoveToPointEnabled="True"
-                            AutoToolTipPrecision="0" AutoToolTipPlacement="BottomRight" PreviewMouseLeftButtonUp="sldValueHsv_PreviewMouseLeftButtonUp"/>
+                            AutoToolTipPrecision="0" AutoToolTipPlacement="BottomRight" PreviewMouseLeftButtonUp="SliderDim_PreviewMouseLeftButtonUp"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="3" Grid.Column="1" >
-                    <ComboBox x:Name="cmbEffect" HorizontalAlignment="Center" Margin="0,5,0,0" Width="80" 
-                              IsEnabled="False" DropDownClosed="cmbEffect_DropDownClosed"/>
+                    <ComboBox x:Name="comboboxEffect" HorizontalAlignment="Center" Margin="0,5,0,0" Width="80" 
+                              IsEnabled="False" DropDownClosed="ComboboxEffect_DropDownClosed"/>
                 </StackPanel>
 
 

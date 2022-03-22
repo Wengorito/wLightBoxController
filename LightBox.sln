@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LightBoxController", "Light
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LightBoxGUI", "LightBoxGUI\LightBoxGUI.csproj", "{0FD3D01C-CB26-4381-B9AA-F6B054C1E5F8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightBoxController.Tests", "LightBoxController.Test\LightBoxController.Tests.csproj", "{4524154D-23C3-4A6B-8181-8FDFFA53E3E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LightBoxController.Tests", "LightBoxController.Test\LightBoxController.Tests.csproj", "{4524154D-23C3-4A6B-8181-8FDFFA53E3E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

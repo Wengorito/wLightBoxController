@@ -8,13 +8,12 @@
 * [Author](#author)
 
 ## General information
-This project has been created in order to get a basic grip on the API and JSON usage as well as general good coding craft. It is based on officialy avaialble API providing communication with BleBox devices with API type: wLightBox (in this particular case the wireless LED controller wLightBox v2/v3 hardware).
+This project has been created in order to get a basic grip on the API and JSON usage as well as general good coding craft. It is based on officialy avaialble API providing communication with BleBox devices with API type: wLightBox (in this particular case the wireless LED controller wLightBox v3 hardware).
 The project consists of reusable class library LightBoxController performing basic HTTP requests on the host device and exemplary user interface LightBoxGUI presenting the proper usage of the library.
 https://technical.blebox.eu/openapi_wlightbox/openAPI_wLightBox_20190808.html
 
 ## Technologies used
-The whole project has been created using the .NET 5 target framework and Windows Presentation Foundation
-
+The whole project has been created using the .NET 5 target framework and Windows Presentation Foundation.
 NuGet packages reference:
 
 ### LightBoxController:

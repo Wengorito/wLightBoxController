@@ -24,6 +24,7 @@ NuGet packages reference:
 - Extended.Wpf.Toolkit v4.2.0
 
 ### LightBoxController.Tests
+- Microsoft.NET.Test.Sdk v17.2.0-preview-20220301-01
 - Moq v4.17.2
 - xunit v2.4.1
 - xunit.runner.visualstudio v2.4.3

@@ -24,6 +24,7 @@ namespace LightBoxController
         }
         public class Rgbw
         {
+            public int colorMode { get; set; }
             public int effectID { get; set; }
             public string desiredColor { get; set; }
             public string currentColor { get; set; }
@@ -34,6 +35,7 @@ namespace LightBoxController
         {
             public Rgbw rgbw { get; set; }
         }
+        //Although identical to Get, supposedly comes useful later on
         public class RootDeviceStateSet
         {
             public Rgbw rgbw { get; set; }

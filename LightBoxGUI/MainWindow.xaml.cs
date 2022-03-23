@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -37,8 +34,12 @@ namespace LightBoxGUI
             }
         }
 
-        //global variable for keeping the colour, necessary for the Dim slider 
-        private System.Windows.Media.Color? colour;
+        //Global variable for storing the current colour value
+        private System.Windows.Media.Color? colourGlobal;
+
+        //Global variable for storing the colour (value+hue) displayed before toggling off
+        //This is oddly necessary, because lastOnColor does not store the last displayed colour!
+        //API enigmatically says: As the name of field says - an example of poorly commented section
         private string colourLast;
 
         public MainWindow()
@@ -59,20 +60,15 @@ namespace LightBoxGUI
                 new ComboBoxEffects("Effect Axe", 4)
             };
 
-            comboboxEffect.DisplayMemberPath = "_Key";
-            comboboxEffect.SelectedValuePath = "_Value";
-            comboboxEffect.ItemsSource = comboEffList;
-            comboboxEffect.SelectedIndex = 0;
+            comboBoxEffect.DisplayMemberPath = "Key";
+            comboBoxEffect.SelectedValuePath = "Value";
+            comboBoxEffect.ItemsSource = comboEffList;
+            comboBoxEffect.SelectedIndex = 0;
         }
         private void DTimer_Tick(object sender, EventArgs e)
         {
             GetColorState(sender, e);
         }
-        /// <summary>
-        /// A method to determine if an IP address is internal, as specified in RFC1918
-        /// </summary>
-        /// <param name="toTest">The IP address that will be tested</param>
-        /// <returns>Returns true if the IP is internal, false if it is external</returns>
         private static bool IsInternal(IPAddress toTest)
         {
             if (IPAddress.IsLoopback(toTest)) return false;
@@ -89,7 +85,7 @@ namespace LightBoxGUI
         }
         private void ButtonSetIp_Click(object sender, RoutedEventArgs e)
         {
-            string ipAddress = tbIpAddress.Text;
+            string ipAddress = textboxIpAddress.Text;
             //ValidateIP
             if (IPAddress.TryParse(ipAddress, out IPAddress ip))
             {
@@ -103,7 +99,7 @@ namespace LightBoxGUI
                         {
                             buttonSetIp.Background = Brushes.Green;
                             buttonGetInfo.IsEnabled = true;
-                            tgbToggle.IsEnabled = true;
+                            toggleButtonToggle.IsEnabled = true;
 
                             //controller.dispose();
                             //TODO singleton
@@ -117,7 +113,7 @@ namespace LightBoxGUI
                         else
                         {
                             buttonSetIp.Background = Brushes.Gray;
-                            tgbToggle.IsEnabled = false;
+                            toggleButtonToggle.IsEnabled = false;
                             buttonGetInfo.IsEnabled = false;
                             MessageBox.Show("Selected IP device not available");
                         }
@@ -131,7 +127,6 @@ namespace LightBoxGUI
             else
                 MessageBox.Show("This is not a valid ip address. Re-enter");
         }
-
         private async void ButtonGetInfo_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -143,10 +138,10 @@ namespace LightBoxGUI
             }
             catch (Exception)
             {
-                MessageBox.Show($"Selected host ({tbIpAddress.Text}) not responding.");
+                MessageBox.Show($"Selected host ({textboxIpAddress.Text}) not responding.");
             }
         }
-        private async Task GetColorState(object sender, EventArgs e)
+        private async void GetColorState(object sender, EventArgs e)
         {
             try
             {
@@ -154,6 +149,8 @@ namespace LightBoxGUI
                 if (myDevice?.rgbw != null)
                 {
                     rectangleColor.Fill = (SolidColorBrush)new BrushConverter().ConvertFrom($"#{myDevice.rgbw.currentColor.Remove(6, 2)}");
+                    string ww = myDevice.rgbw.currentColor.Remove(0, 6);
+                    rectangleWhite.Fill = (SolidColorBrush)new BrushConverter().ConvertFrom($"#{ww}{ww}{ww}");
                 }
             }
             catch (Exception ex)
@@ -166,27 +163,24 @@ namespace LightBoxGUI
         {
             try
             {
-                await controller.SetColorAsync(colour.ToString(), (int)sliderDim.Value);
+                await controller.SetColorAsync(string.Concat(colourGlobal.ToString().Remove(0, 3),
+                    ((int)(sliderWhite.Value * 255 / 100)).ToString("X2")), (int)sliderDim.Value);
                 labelCurrentEffect.Content = "";
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Device Disco nnected\n" + "Source : " + ex.Source + "\nMessage : " + ex.Message);
                 rectangleColor.Fill = Brushes.Gray;
+                rectangleWhite.Fill = Brushes.Gray;
             }
         }
-        private void SliderDim_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            SetState();
-            if (buttonRead.IsChecked == false)
-                buttonRead.IsChecked = true;
-        }
-        private async void ComboboxEffect_DropDownClosed(object sender, EventArgs e)
+        private async void ComboBoxEffect_DropDownClosed(object sender, EventArgs e)
         {
             try
             {
                 rectangleColor.Fill = Brushes.Gray;
-                ComboBoxEffects selectedEffect = (ComboBoxEffects)comboboxEffect.SelectedItem;
+                rectangleWhite.Fill = Brushes.Gray;
+                ComboBoxEffects selectedEffect = (ComboBoxEffects)comboBoxEffect.SelectedItem;
                 await controller.SetEffect(selectedEffect.Value);
                 if (selectedEffect.Value != 0)
                     buttonRead.IsChecked = false;
@@ -207,7 +201,7 @@ namespace LightBoxGUI
             }
             catch (Exception)
             {
-                MessageBox.Show($"Host device ({tbIpAddress.Text}) not responding. Check the connection.");
+                MessageBox.Show($"Host device ({textboxIpAddress.Text}) not responding. Check the connection.");
             }
         }
         private void ColorPicker_Closed(object sender, RoutedEventArgs e)
@@ -215,7 +209,7 @@ namespace LightBoxGUI
 
             if (colorPicker.SelectedColor.HasValue)
             {
-                colour = colorPicker.SelectedColor;
+                colourGlobal = colorPicker.SelectedColor;
                 SetState();
                 if (buttonRead.IsChecked == false)
                     buttonRead.IsChecked = true;
@@ -229,7 +223,7 @@ namespace LightBoxGUI
         {
             dTimer.Stop();
         }
-        private async void TgbToggle_Checked(object sender, RoutedEventArgs e)
+        private async void ToggleButtonToggle_Checked(object sender, RoutedEventArgs e)
         {
             //initial run - check last color which has been set before shutting down
             var myDevice = await controller.GetStateAsync();
@@ -237,24 +231,27 @@ namespace LightBoxGUI
             {
                 if (string.IsNullOrEmpty(colourLast))
                 {
-                    string stringColor = myDevice.rgbw.lastOnColor.Remove(6, 2).Insert(0, "#FF");
+                    string stringColor = myDevice.rgbw.lastOnColor;
                     await controller.SetColorAsync(stringColor);
-                    colour = (Color)ColorConverter.ConvertFromString(stringColor);
+                    colourGlobal = (Color)ColorConverter.ConvertFromString(stringColor.Remove(6, 2).Insert(0, "#FF"));
+                    sliderWhite.Value = int.Parse(stringColor.Remove(0, 6), System.Globalization.NumberStyles.HexNumber) * 100 / 255;
                 }
                 else
-                    await controller.SetColorAsync(colourLast.Remove(6, 2).Insert(0, "#FF"));
+                    await controller.SetColorAsync(colourLast);
 
                 buttonRead.IsEnabled = true;
                 buttonRead.IsChecked = true;
                 colorPicker.IsEnabled = true;
-                comboboxEffect.IsEnabled = true;
+                comboBoxEffect.IsEnabled = true;
                 sliderDim.IsEnabled = true;
+                sliderWhite.IsEnabled = true;
+                //sliderTemperature.IsEnabled = true;
                 textboxFadeTime.IsEnabled = true;
             }
             else
-                tgbToggle.IsChecked = false;
+                toggleButtonToggle.IsChecked = false;
         }
-        private async void TgbToggle_Unchecked(object sender, RoutedEventArgs e)
+        private async void ToggleButtonToggle_Unchecked(object sender, RoutedEventArgs e)
         {
             //TODO turn off the device, not sending black colour somehow..
             try
@@ -264,19 +261,22 @@ namespace LightBoxGUI
                 {
                     colourLast = myDevice.rgbw.currentColor;
                 }
-                await controller.SetColorAsync("#FF000000");//max dim -> black
+                await controller.SetColorAsync("00000000");
 
                 labelCurrentEffect.Content = "";
                 buttonRead.IsEnabled = false;
                 colorPicker.IsEnabled = false;
-                comboboxEffect.IsEnabled = false;
+                comboBoxEffect.IsEnabled = false;
                 sliderDim.IsEnabled = false;
+                sliderWhite.IsEnabled = false;
+                //sliderTemperature.IsEnabled = false;
                 textboxFadeTime.IsEnabled = false;
             }
             catch (Exception)
             {
-                MessageBox.Show($"Host device ({tbIpAddress.Text}) not responding. Check the connection.");
+                MessageBox.Show($"Host device ({textboxIpAddress.Text}) not responding. Check the connection.");
                 rectangleColor.Fill = Brushes.Gray;
+                rectangleWhite.Fill = Brushes.Gray;
             }
         }
         private void TextboxFadeTime_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -298,7 +298,7 @@ namespace LightBoxGUI
                         }
                         catch (Exception)
                         {
-                            MessageBox.Show($"Host device ({tbIpAddress.Text}) not responding. Check the connection.");
+                            MessageBox.Show($"Host device ({textboxIpAddress.Text}) not responding. Check the connection.");
                             rectangleColor.Fill = Brushes.Gray;
                         }
                     }
@@ -309,13 +309,29 @@ namespace LightBoxGUI
                 }
             }
         }
-        private void TbIpAddress_KeyDown(object sender, KeyEventArgs e)
+        private void TextboxIpAddress_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Return)
             {
                 ButtonSetIp_Click(sender, e);
                 Keyboard.ClearFocus();
             }
+        }
+        private void SliderDim_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            SetState();
+            if (buttonRead.IsChecked == false)
+                buttonRead.IsChecked = true;
+        }
+        private void SliderWhite_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            SetState();
+            if (buttonRead.IsChecked == false)
+                buttonRead.IsChecked = true;
+        }
+        private void SliderTemperature_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+
         }
     }
 }

@@ -26,7 +26,6 @@ namespace LightBoxController.Tests
             }
         }
 
-        //https://gingter.org/2018/07/26/how-to-mock-httpclient-in-your-net-c-unit-tests/
         [Fact]
         public async Task Mock_GetInfoShouldNotReturnNull()
         {
@@ -57,7 +56,7 @@ namespace LightBoxController.Tests
             LightBoxClass controllerUnderTest = new(httpClient);
 
             //ACT
-            HttpObjects.RootDevice result = await controllerUnderTest.GetInfoAsync("/api/test/whatever");
+            RootDevice result = await controllerUnderTest.GetInfoAsync("/api/test/whatever");
 
             // ASSERT
             Assert.NotNull(result);
@@ -104,7 +103,7 @@ namespace LightBoxController.Tests
             LightBoxClass controllerUnderTest = new LightBoxClass(httpClient);
 
             //ACT
-            string colourString = "#FFAAEECB";
+            string colourString = "FFAAEECB";
             await controllerUnderTest.SetColorAsync(colourString);
 
             //ASSERT
@@ -217,7 +216,6 @@ namespace LightBoxController.Tests
         }
 
         //different approach (more generic)
-        //https://peterdaugaardrasmussen.com/2018/10/11/c-how-to-mock-the-httpclient-for-tests/
         [Fact]
         public async Task HandlerStub_GetInfoShouldReturnTheSame()
         {
@@ -249,7 +247,7 @@ namespace LightBoxController.Tests
         public async Task HandlerStub_GetStateIfResultNotAfflictedReturnTrue()
         {
             // ARRANGE
-            string expectedMessage = "{\"rgbw\":{\"effectID\":2,\"desiredColor\":\"ff00300000\"," +
+            string expectedMessage = "{\"rgbw\":{\"colorMode\":2,\"effectID\":2,\"desiredColor\":\"ff00300000\"," +
                 "\"currentColor\":\"ff00300000\",\"lastOnColor\":\"ff00300000\"," +
                 "\"durationsMs\":{\"colorFade\":1000}}}";
             var httpClient = new HttpClient(new HttpMessageHandlerStub(async (request, cancellationToken) =>

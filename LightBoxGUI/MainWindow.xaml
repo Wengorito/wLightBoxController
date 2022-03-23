@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:LightBoxGUI"
         ResizeMode="NoResize"
         mc:Ignorable="d"
-        Title="MainWindow" Height="400" Width="280" WindowStartupLocation="CenterScreen">
+        Title="MainWindow" Height="440" Width="280" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -50,7 +50,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="0" Grid.Column="1">
-                    <TextBox x:Name="tbIpAddress" HorizontalAlignment="Center" Margin="0,7,0,0" Text="192.168.4.1" TextWrapping="Wrap"  Width="80" TextAlignment="Center" KeyDown="TbIpAddress_KeyDown"/>
+                    <TextBox x:Name="textboxIpAddress" HorizontalAlignment="Center" Margin="0,7,0,0" Text="192.168.4.1" TextWrapping="Wrap"  Width="80" TextAlignment="Center" KeyDown="TextboxIpAddress_KeyDown"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="1">
                     <Label x:Name="labelDeviceNameInfo" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top"/>
@@ -72,6 +72,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <Grid.ColumnDefinitions>
@@ -80,21 +81,29 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Row="0" Grid.Column="0">
-                    <ToggleButton x:Name="tgbToggle" Content="Toggle" Margin="0,3,0,0" HorizontalAlignment="Center" Width="80"
-                                  Checked="TgbToggle_Checked" Unchecked="TgbToggle_Unchecked" IsEnabled="False"/>
+                    <ToggleButton x:Name="toggleButtonToggle" Content="Toggle" Margin="0,3,0,0" HorizontalAlignment="Center" Width="80"
+                                  Checked="ToggleButtonToggle_Checked" Unchecked="ToggleButtonToggle_Unchecked" IsEnabled="False"/>
                 </StackPanel>
+                
                 <StackPanel Grid.Row="1" Grid.Column="0">
                     <ToggleButton x:Name="buttonRead" Content="Reading" Margin="0,5,0,0" HorizontalAlignment="Center" Width="80"
                                   Checked="ButtonRead_Check" Unchecked="ButtonRead_Uncheck" IsEnabled="False"/>
                 </StackPanel>
-                <StackPanel Grid.Row="2" Grid.Column="0">
-                    <Rectangle x:Name="rectangleColor" HorizontalAlignment="Center" Height="50" Margin="0,5,0,0" Grid.Row="1" Fill="Black" Stroke="Black" VerticalAlignment="Top" Width="50" />
-                </StackPanel>
+                
+                <DockPanel Grid.Row="2" Grid.Column="0">
+                    <Rectangle x:Name="rectangleColor" HorizontalAlignment="Left" Height="50" Width="35" Margin="17,5,0,0" Grid.Row="1" Fill="Black" Stroke="Black" VerticalAlignment="Top"/>
+                    <Rectangle x:Name="rectangleWhite" HorizontalAlignment="Right" Height="50" Width="35" Margin="0,5,17,0" Grid.Row="1" Fill="Black" Stroke="Black" VerticalAlignment="Top"/>
+                </DockPanel>
+                
                 <StackPanel Grid.Row="3" Grid.Column="0">
+                    <Slider x:Name="sliderDim" Width="80" Minimum="0" Maximum="100" Value="100" IsEnabled="False" HorizontalAlignment="Center" Margin="0,7,0,0"
+                            SmallChange="1" LargeChange="10" IsMoveToPointEnabled="True"
+                            AutoToolTipPrecision="0" AutoToolTipPlacement="BottomRight" PreviewMouseLeftButtonUp="SliderDim_PreviewMouseLeftButtonUp"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="4" Grid.Column="0">
                     <Label x:Name="labelCurrentEffect" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Top"/>
                 </StackPanel>
-
-
 
                 <StackPanel Grid.Row="0" Grid.Column="1">
                     <xctk:ColorPicker Name="colorPicker" DisplayColorAndName="False" ColorMode="ColorCanvas" Margin="0,3,0,0" 
@@ -105,21 +114,44 @@
                         </xctk:ColorPicker.Background>
                     </xctk:ColorPicker>
                 </StackPanel>
+                
                 <StackPanel Grid.Row="1" Grid.Column="1">
                     <TextBox x:Name="textboxFadeTime" HorizontalAlignment="Center" Margin="0,5,0,0" Text="Fade time" TextWrapping="Wrap"  Width="80" 
                              TextAlignment="Center" PreviewMouseDoubleClick="TextboxFadeTime_PreviewMouseDoubleClick"
                              KeyDown="TextboxFadeTime_KeyDown" IsEnabled="False" ToolTip="1000:360000[ms], double-click to reset" />
                 </StackPanel>
-                <StackPanel Grid.Row="2" Grid.Column="1">
-                    <Label Content="Dimming" HorizontalAlignment="Center" Margin="0,5,0,0" Grid.Row="1" VerticalAlignment="Top" />
-                    <Slider x:Name="sliderDim" Width="80" Minimum="0" Maximum="100" Value="100" IsEnabled="False"
-                            SmallChange="1" LargeChange="10" IsMoveToPointEnabled="True"
-                            AutoToolTipPrecision="0" AutoToolTipPlacement="BottomRight" PreviewMouseLeftButtonUp="SliderDim_PreviewMouseLeftButtonUp"/>
-                </StackPanel>
 
+                <StackPanel Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" Margin="0,15,0,0">
+                    <Rectangle Width="80" Height="10" >
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1" >
+                                <GradientStop Color="Black" Offset="0" />
+                                <GradientStop Color="White" Offset="1" />
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <Slider x:Name="sliderWhite" Width="80" Minimum="0" Maximum="100" Value="0" IsEnabled="False" HorizontalAlignment="Center" Margin="0,5,0,0"
+                            SmallChange="1" LargeChange="10" IsMoveToPointEnabled="True"
+                            AutoToolTipPrecision="0" AutoToolTipPlacement="BottomRight" PreviewMouseLeftButtonUp="SliderWhite_PreviewMouseLeftButtonUp"/>
+                </StackPanel>
+                
                 <StackPanel Grid.Row="3" Grid.Column="1" >
-                    <ComboBox x:Name="comboboxEffect" HorizontalAlignment="Center" Margin="0,5,0,0" Width="80" 
-                              IsEnabled="False" DropDownClosed="ComboboxEffect_DropDownClosed"/>
+                    <Rectangle Width="80" Height="10" Margin="0,5,0,0" >
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1" >
+                                <GradientStop Color="LightBlue" Offset="0" />
+                                <GradientStop Color="LightYellow" Offset="1" />
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <Slider x:Name="sliderTemperature" Width="80" Minimum="0" Maximum="100" Value="0" IsEnabled="False" Margin="0,5,0,0"
+                            SmallChange="1" LargeChange="10" IsMoveToPointEnabled="True"
+                            AutoToolTipPrecision="0" AutoToolTipPlacement="BottomRight" PreviewMouseLeftButtonUp="SliderTemperature_PreviewMouseLeftButtonUp"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Row="4" Grid.Column="1" >
+                    <ComboBox x:Name="comboBoxEffect" HorizontalAlignment="Center" Margin="0,5,0,0" Width="80" 
+                              IsEnabled="False" DropDownClosed="ComboBoxEffect_DropDownClosed"/>
                 </StackPanel>
 
 

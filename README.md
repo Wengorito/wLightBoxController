@@ -34,7 +34,7 @@ NuGet packages reference:
 ## Setup
 To run this project clone it locally and open with Visual Studio (preferably 2019 or newer). LightBoxGUI should be set as the startup project. Compile and run. 
 For now, you shall use the device's internal access point (something like 192.168.4.1) 
-to which you have to connect your PC or use the local WiFi provided that it has been preconfigured in the hardware.
+to which you have to connect your PC or use the local WiFi provided that it has been preconfigured in the hardware. As for now, device works exclusively in RGBW colour mode.
 
 ## Author
 Grzegorz Wengorz Inc.
